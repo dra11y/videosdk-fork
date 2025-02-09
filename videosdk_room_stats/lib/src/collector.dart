@@ -41,12 +41,12 @@ class Collector {
     report["count"] = previousReport != null ? previousReport["count"] + 1 : 1;
 
     int? timestamp = DateTime.now().millisecond;
-    stats.forEach((stat) {
+    for (var stat in stats) {
       // timestamp = stat.timestamp;
       List<Map<String, dynamic>> values =
           extract(stat.values, report, stat.type, stat.id, report['name']);
 
-      values.forEach((data) {
+      for (var data in values) {
         try {
           if (data.containsKey('value') && data.containsKey('type')) {
             if (data.containsKey('ssrc')) {
@@ -79,8 +79,8 @@ class Collector {
         } catch (error) {
           // log("AFTER ANALYZE :: " + error.toString());
         }
-      });
-    });
+      }
+    }
     report['timestamp'] = timestamp;
     return report;
   }

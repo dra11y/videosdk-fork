@@ -10,12 +10,12 @@ Map<String, dynamic> extractBytesSentReceived(
   var totalKBytesSent = (bunch[Property.bytesSent.name] ?? 0) / 1024;
 
   var timestamp = bunch[Property.timestamp.name] ?? DateTime.now().millisecond;
-  var KBytesReceived = totalKBytesReceived -
+  var kBytesReceived = totalKBytesReceived -
       (previousBunch != null
           ? previousBunch['data']['total_KBytes_in'] ?? 0
           : 0);
 
-  var KBytesSent = totalKBytesSent -
+  var kBytesSent = totalKBytesSent -
       (previousBunch != null
           ? previousBunch['data']['total_KBytes_out'] ?? 0
           : 0);
@@ -26,15 +26,15 @@ Map<String, dynamic> extractBytesSentReceived(
       ? ((timestamp - previousTimestamp) as num).abs()
       : 0;
   var kbsSpeedReceived = deltaMs > 0
-      ? ((KBytesReceived * 0.008 * 1024) / deltaMs)
+      ? ((kBytesReceived * 0.008 * 1024) / deltaMs)
       : 0; // kbs = kilo bits per second
 
-  var kbsSpeedSent = deltaMs > 0 ? ((KBytesSent * 0.008 * 1024) / deltaMs) : 0;
+  var kbsSpeedSent = deltaMs > 0 ? ((kBytesSent * 0.008 * 1024) / deltaMs) : 0;
   return {
     "total_KBytes_received": totalKBytesReceived,
     "total_KBytes_sent": totalKBytesSent,
-    "delta_KBytes_received": KBytesReceived,
-    "delta_KBytes_sent": KBytesSent,
+    "delta_KBytes_received": kBytesReceived,
+    "delta_KBytes_sent": kBytesSent,
     "kbs_speed_received": kbsSpeedReceived,
     "kbs_speed_sent": kbsSpeedSent,
   };
@@ -149,9 +149,9 @@ Map<String, dynamic> extractAudioVideoPacketReceived(
       packetsReceived != (previousBunch?[kind]?['total_packets_in'] ?? 0)
           ? (deltaPacketsLost * 100) / (deltaPacketsLost + deltaPacketsReceived)
           : 0.0;
-  var KBytesReceived = (bunch[Property.bytesReceived.name] ?? 0) / 1024;
+  var kBytesReceived = (bunch[Property.bytesReceived.name] ?? 0) / 1024;
   var deltaKBytesReceived =
-      KBytesReceived - (previousBunch?[kind]?['total_KBytes_in'] ?? 0);
+      kBytesReceived - (previousBunch?[kind]?['total_KBytes_in'] ?? 0);
   var timestamp = bunch[Property.timestamp.name] ?? DateTime.now().millisecond;
   var previousTimestamp = previousBunch?['timestamp'];
 
@@ -168,7 +168,7 @@ Map<String, dynamic> extractAudioVideoPacketReceived(
     'deltaPacketsReceived': deltaPacketsReceived,
     'packetsLost': packetsLost,
     'deltaPacketsLost': deltaPacketsLost,
-    'KBytesReceived': KBytesReceived,
+    'KBytesReceived': kBytesReceived,
     'deltaKBytesReceived': deltaKBytesReceived,
     'kbsReceived': kbsReceived,
   };
@@ -300,9 +300,9 @@ Map<String, dynamic> extractAudioVideoPacketSent(Map<dynamic, dynamic> bunch,
   var packetsSent = (bunch[Property.packetsSent.name] ?? 0);
   var deltaPacketsSent =
       packetsSent - (previousBunch?[kind]?['total_packets_out'] ?? 0);
-  var KBytesSent = (bunch[Property.bytesSent.name] ?? 0) / 1024;
+  var kBytesSent = (bunch[Property.bytesSent.name] ?? 0) / 1024;
   var deltaKBytesSent =
-      (KBytesSent - (previousBunch?[kind]?['total_KBytes_out'] ?? 0));
+      (kBytesSent - (previousBunch?[kind]?['total_KBytes_out'] ?? 0));
   var timestamp = bunch[Property.timestamp.name] ?? DateTime.now().millisecond;
   var previousTimestamp = previousBunch?['timestamp'];
 
@@ -316,7 +316,7 @@ Map<String, dynamic> extractAudioVideoPacketSent(Map<dynamic, dynamic> bunch,
   return {
     'packetsSent': packetsSent,
     'deltaPacketsSent': deltaPacketsSent,
-    'KBytesSent': KBytesSent,
+    'KBytesSent': kBytesSent,
     'deltaKBytesSent': deltaKBytesSent,
     'kbsSent': kbsSent,
   };
@@ -373,7 +373,7 @@ Map<String, dynamic> extractQualityLimitation(Map<dynamic, dynamic> bunch) {
           ? bunch[Property.qualityLimitationResolutionChanges.name]
           : null;
 
-  Map<dynamic, dynamic>? durations = null;
+  Map<dynamic, dynamic>? durations;
   if (bunch.containsKey(Property.qualityLimitationDurations.name)) {
     String jsonString = _convertToJsonStringQuotes(
         raw: bunch[Property.qualityLimitationDurations.name].toString());
@@ -384,9 +384,11 @@ Map<String, dynamic> extractQualityLimitation(Map<dynamic, dynamic> bunch) {
   }
 
   if (durations != null) {
-    durations.keys.forEach((key) => {
-          if (durations![key] > 1000) {durations[key] = durations[key] / 1000}
-        });
+    for (var key in durations.keys) {
+      if (durations[key] > 1000) {
+        durations[key] = durations[key] / 1000;
+      }
+    }
   }
   return {
     'reason': reason,
@@ -478,7 +480,7 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
         if (selectedPair) {
           var valueSentReceived =
               extractBytesSentReceived(bunch, previousBunch);
-          var bandwidth = extractAvailableBandwidth(bunch);
+          // var bandwidth = extractAvailableBandwidth(bunch);
           var rttConnectivity = extractRTTBasedOnSTUNConnectivityCheck(
               bunch, "data", previousBunch);
           return [
@@ -814,7 +816,10 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
             {
               'ssrc': ssrc,
               'type': StatType.video.name,
-              'value': {"total_pauses_duration": bunch[Property.totalPausesDuration.name]},
+              'value': {
+                "total_pauses_duration":
+                    bunch[Property.totalPausesDuration.name]
+              },
             },
             {
               'ssrc': ssrc,
@@ -824,7 +829,10 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
             {
               'ssrc': ssrc,
               'type': StatType.video.name,
-              'value': {"total_freezes_duration": bunch[Property.totalFreezesDuration.name]},
+              'value': {
+                "total_freezes_duration":
+                    bunch[Property.totalFreezesDuration.name]
+              },
             },
           ];
         }
@@ -968,7 +976,7 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
           ];
         }
       } catch (error) {
-        log("ERROR:: outbound-rtp" + error.toString());
+        log("ERROR:: outbound-rtp$error");
       }
       break;
 
@@ -976,9 +984,9 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
       List<Map<String, dynamic>> result = [];
       // Check for Audio codec
       try {
-        (previousBunch?[Value.audio.name] as Map<dynamic, dynamic>)
-            .keys
-            .forEach((ssrc) {
+        for (var ssrc
+            in (previousBunch?[Value.audio.name] as Map<dynamic, dynamic>)
+                .keys) {
           var ssrcAudioBunch = previousBunch?[Value.audio.name][ssrc] ?? {};
           if (ssrcAudioBunch['codec_id_in'] == id ||
               ssrcAudioBunch['codec_id_out'] == id) {
@@ -997,12 +1005,12 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
               });
             }
           }
-        });
+        }
 
         // Check for Video codec
-        (previousBunch?[Value.video.name] as Map<dynamic, dynamic>)
-            .keys
-            .forEach((ssrc) {
+        for (var ssrc
+            in (previousBunch?[Value.video.name] as Map<dynamic, dynamic>)
+                .keys) {
           var ssrcVideoBunch = previousBunch?[Value.video.name][ssrc] ?? {};
           if (ssrcVideoBunch['codec_id_in'] == id ||
               ssrcVideoBunch['codec_id_out'] == id) {
@@ -1021,7 +1029,7 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
               });
             }
           }
-        });
+        }
       } catch (error) {
         // log("ERROR CODEC :: " + error.toString());
       }
@@ -1156,9 +1164,9 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
     case 'media-source':
       List<Map<String, dynamic>> result = [];
       try {
-        (previousBunch?[Value.audio.name] as Map<dynamic, dynamic>)
-            .keys
-            .forEach((ssrc) {
+        for (var ssrc
+            in (previousBunch?[Value.audio.name] as Map<dynamic, dynamic>)
+                .keys) {
           var ssrcAudioBunch = previousBunch?[Value.audio.name][ssrc] ?? {};
           if (ssrcAudioBunch['media_source_id'] == id) {
             var trackId = bunch[Property.trackIdentifier.name];
@@ -1168,11 +1176,11 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
               'value': {'track_id_out': trackId},
             });
           }
-        });
+        }
 
-        (previousBunch?[Value.video.name] as Map<dynamic, dynamic>)
-            .keys
-            .forEach((ssrc) {
+        for (var ssrc
+            in (previousBunch?[Value.video.name] as Map<dynamic, dynamic>)
+                .keys) {
           var ssrcVideoBunch = previousBunch?[Value.video.name][ssrc] ?? {};
           if (ssrcVideoBunch['media_source_id'] == id) {
             var trackId = bunch[Property.trackIdentifier.name];
@@ -1182,18 +1190,17 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
               'value': {'track_id_out': trackId},
             });
           }
-        });
+        }
       } catch (error) {
         // log("ERROR media-source :: " + error.toString());
       }
       return result;
-      break;
     case 'track':
       List<Map<String, dynamic>> result = [];
       try {
-        (previousBunch?[Value.audio.name] as Map<dynamic, dynamic>)
-            .keys
-            .forEach((ssrc) {
+        for (var ssrc
+            in (previousBunch?[Value.audio.name] as Map<dynamic, dynamic>)
+                .keys) {
           var ssrcAudioBunch = previousBunch?[Value.audio.name][ssrc] ?? {};
           if (ssrcAudioBunch['track_in'] == id ||
               ssrcAudioBunch['track_out'] == id) {
@@ -1212,10 +1219,10 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
               });
             }
           }
-        });
-        (previousBunch?[Value.video.name] as Map<dynamic, dynamic>)
-            .keys
-            .forEach((ssrc) {
+        }
+        for (var ssrc
+            in (previousBunch?[Value.video.name] as Map<dynamic, dynamic>)
+                .keys) {
           var ssrcVideoBunch = previousBunch?[Value.video.name][ssrc] ?? {};
           if (ssrcVideoBunch['track_in'] == id ||
               ssrcVideoBunch['track_out'] == id) {
@@ -1234,13 +1241,12 @@ List<Map<String, dynamic>> extract(Map<dynamic, dynamic> bunch,
               });
             }
           }
-        });
+        }
       } catch (error) {
         // log("ERROR CODEC :: " + error.toString());
       }
 
       return result;
-      break;
     default:
       return [{}];
   }

@@ -1,4 +1,4 @@
-library videosdk_room_stats;
+library;
 
 export 'src/videosdk_metrics.dart' show VideoSDKMetrics, VideoSDKMetricsConfig;
 export 'src/probe.dart' show Probe;

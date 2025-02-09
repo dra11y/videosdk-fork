@@ -1,4 +1,4 @@
-library videosdk_room_stats;
+library;
 
 import 'package:events2/events2.dart';
 import 'package:videosdk_room_stats/src/monitoring_object.dart';

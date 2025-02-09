@@ -270,12 +270,12 @@ Map<String, dynamic> getDefaultMetrics(Map<String, dynamic>? previousStats) {
       "data": {...(previousStats["data"] as Map)},
       "network": {...(previousStats["network"] as Map)},
     };
-    (previousStats["audio"] as Map).keys.forEach((ssrc) {
+    for (var ssrc in (previousStats["audio"] as Map).keys) {
           metrics["audio"][ssrc] = {...(previousStats["audio"][ssrc] as Map)};
-        });
-    (previousStats["video"] as Map).keys.forEach((ssrc) {
+        }
+    for (var ssrc in (previousStats["video"] as Map).keys) {
           metrics["video"][ssrc] = {...(previousStats["video"][ssrc] as Map)};
-        });
+        }
     return metrics;
   }
   return {

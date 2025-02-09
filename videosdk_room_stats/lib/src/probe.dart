@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:videosdk_room_stats/src/monitoring_object.dart';
 import 'package:videosdk_room_stats/src/collector.dart';
@@ -25,7 +24,7 @@ class Probe {
     }
     collectorInterval = Timer.periodic(
       Duration(milliseconds: config.refreshEvery),
-      (timer) => {collector.collectStats()},
+      (timer) {collector.collectStats();},
     );
   }
 
