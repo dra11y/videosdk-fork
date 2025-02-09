@@ -1,0 +1,16 @@
+name: videosdk_otel
+version: 0.0.2
+description: A framework for collecting traces from applications.
+homepage: https://github.com/zujonow/opentelemetry_dart
+environment:
+  sdk: ">=2.12.0 <4.0.0"
+
+dependencies:
+  collection: ^1.0.0
+  fixnum: ">=0.10.0 <2.0.0"
+  http: ^1.0.0
+  logging: ">=0.11.4 <2.0.0"
+  protobuf: ">=1.1.0 <3.0.0"
+  quiver: ">=2.1.5 <4.0.0"
+  meta: ^1.9.1
+  
