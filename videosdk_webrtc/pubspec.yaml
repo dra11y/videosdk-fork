@@ -4,23 +4,22 @@ version: 0.0.4+F
 homepage: https://www.videosdk.live
 environment:
   sdk: ">=3.3.0 <4.0.0"
-  flutter: ">=1.22.0"
+  flutter: ">=3.0.0"
 
 dependencies:
-  collection: ^1.18.0
-  dart_webrtc: ^1.4.9
+  collection: ^1.19.0
+  dart_webrtc: ^1.4.10
   flutter:
     sdk: flutter
-  path_provider: ^2.1.4
+  path_provider: ^2.1.5
   web: ^1.1.0
-  webrtc_interface: ^1.2.0
+  webrtc_interface: ^1.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   import_sorter: ^4.6.0
-  lints: ^5.0.0
-  pedantic: ^1.11.1
+  lints: ^5.1.1
   test: any
 
 flutter:
