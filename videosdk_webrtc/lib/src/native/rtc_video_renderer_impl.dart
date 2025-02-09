@@ -172,4 +172,7 @@ class RTCVideoRenderer extends ValueNotifier<RTCVideoValue>
     }
     return true;
   }
+
+  @override
+  RTCVideoValue get videoValue => value;
 }
