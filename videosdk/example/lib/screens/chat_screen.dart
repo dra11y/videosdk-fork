@@ -6,12 +6,12 @@ import '../widgets/chat/chat_widget.dart';
 class ChatScreen extends StatefulWidget {
   final Room meeting;
   const ChatScreen({
-    Key? key,
+    super.key,
     required this.meeting,
-  }) : super(key: key);
+  });
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {

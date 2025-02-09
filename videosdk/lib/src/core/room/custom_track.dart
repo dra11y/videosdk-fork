@@ -25,13 +25,12 @@ class CustomTrack {
     // this.optimizationMode = "motion",
   });
 
-  CustomTrack.audioTrack({
-    required this.mediaStream,
-    this.audioEncoderConfig = CustomAudioTrackConfig.speech_standard,
-    this.noiseConfig,
-    this.kind = CustomTrackKind.AUDIO,
-    this.microphoneId
-  });
+  CustomTrack.audioTrack(
+      {required this.mediaStream,
+      this.audioEncoderConfig = CustomAudioTrackConfig.speech_standard,
+      this.noiseConfig,
+      this.kind = CustomTrackKind.AUDIO,
+      this.microphoneId});
 
   dispose() async {
     try {
@@ -43,8 +42,7 @@ class CustomTrack {
     } catch (error) {
       //
       VideoSDKLog.createLog(
-          message:
-              "error in dispose() \n ${error.toString()}",
+          message: "error in dispose() \n ${error.toString()}",
           logLevel: "ERROR");
       //
       log("ERROR: Unable to dispose track :: $error");

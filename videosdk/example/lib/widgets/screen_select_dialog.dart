@@ -7,7 +7,7 @@ import 'thumbnail_widget.dart';
 
 // ignore: must_be_immutable
 class ScreenSelectDialog extends Dialog {
-  ScreenSelectDialog({Key? key, required this.meeting}) : super(key: key) {
+  ScreenSelectDialog({super.key, required this.meeting}) {
     _getSources();
     _subscriptions.add(desktopCapturer.onAdded.stream.listen((source) {
       _sources[source.id] = source;
@@ -25,19 +25,17 @@ class ScreenSelectDialog extends Dialog {
     }));
   }
 
-  
+  // void _setSources(List<DesktopCapturerSource> source) {
+  //   for (var element in source) {
+  //     _sources[element.id] = element;
+  //   }
 
-  void _setSources(List<DesktopCapturerSource> source) {
-    source.forEach((element) {
-      _sources[element.id] = element;
-    });
-
-    _stateSetter?.call(() {});
-  }
+  //   _stateSetter?.call(() {});
+  // }
 
   final Map<String, DesktopCapturerSource> _sources = {};
   SourceType _sourceType = SourceType.Screen;
-  DesktopCapturerSource? _selected_source;
+  DesktopCapturerSource? _selectedSource;
   final List<StreamSubscription<DesktopCapturerSource>> _subscriptions = [];
   StateSetter? _stateSetter;
   Timer? _timer;
@@ -48,7 +46,7 @@ class ScreenSelectDialog extends Dialog {
     for (var element in _subscriptions) {
       element.cancel();
     }
-    Navigator.pop<DesktopCapturerSource>(context, _selected_source);
+    Navigator.pop<DesktopCapturerSource>(context, _selectedSource);
   }
 
   void _cancel(context) async {
@@ -67,16 +65,15 @@ class ScreenSelectDialog extends Dialog {
         desktopCapturer.updateSources(types: [_sourceType]);
       });
       _sources.clear();
-      sources.forEach((element) {
+      for (var element in sources) {
         _sources[element.id] = element;
-      });
+      }
       _stateSetter?.call(() {});
       return;
     } catch (e) {
       print(e.toString());
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +129,8 @@ class ScreenSelectDialog extends Dialog {
                                 const BoxConstraints.expand(height: 24),
                             child: TabBar(
                                 indicatorColor: Theme.of(context).primaryColor,
-                                onTap: (value) => Future.delayed(Duration.zero, () {
+                                onTap: (value) =>
+                                    Future.delayed(Duration.zero, () {
                                       _sourceType = value == 0
                                           ? SourceType.Screen
                                           : SourceType.Window;
@@ -165,18 +163,18 @@ class ScreenSelectDialog extends Dialog {
                                     crossAxisCount: 2,
                                     children: _sources.entries
                                         .where((element) =>
-                                                element.value.type ==
-                                                SourceType.Screen)
+                                            element.value.type ==
+                                            SourceType.Screen)
                                         .map((e) => ThumbnailWidget(
                                               onTap: (source) {
                                                 if (context.mounted) {
                                                   setState(() {
-                                                    _selected_source = source;
+                                                    _selectedSource = source;
                                                   });
                                                 }
                                               },
                                               source: e.value,
-                                              selected: _selected_source?.id ==
+                                              selected: _selectedSource?.id ==
                                                   e.value.id,
                                             ))
                                         .toList(),
@@ -187,19 +185,19 @@ class ScreenSelectDialog extends Dialog {
                                     crossAxisSpacing: 8,
                                     crossAxisCount: 3,
                                     children: _sources.entries
-                                            .where((element) =>
-                                                element.value.type ==
-                                                SourceType.Window)
+                                        .where((element) =>
+                                            element.value.type ==
+                                            SourceType.Window)
                                         .map((e) => ThumbnailWidget(
                                               onTap: (source) {
                                                 if (context.mounted) {
                                                   setState(() {
-                                                    _selected_source = source;
+                                                    _selectedSource = source;
                                                   });
                                                 }
                                               },
                                               source: e.value,
-                                              selected: _selected_source?.id ==
+                                              selected: _selectedSource?.id ==
                                                   e.value.id,
                                             ))
                                         .toList(),
@@ -215,7 +213,7 @@ class ScreenSelectDialog extends Dialog {
             ),
             SizedBox(
               width: double.infinity,
-              child: ButtonBar(
+              child: OverflowBar(
                 children: <Widget>[
                   MaterialButton(
                     child: const Text(

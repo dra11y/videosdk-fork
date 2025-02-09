@@ -15,7 +15,7 @@ import 'meeting_screen.dart';
 
 // Startup Screen
 class StartupScreen extends StatefulWidget {
-  const StartupScreen({Key? key}) : super(key: key);
+  const StartupScreen({super.key});
 
   @override
   State<StartupScreen> createState() => _StartupScreenState();
@@ -26,7 +26,8 @@ class _StartupScreenState extends State<StartupScreen> {
   String _meetingID = "";
 
   final ButtonStyle _buttonStyle = TextButton.styleFrom(
-    foregroundColor: Colors.white, backgroundColor: primaryColor,
+    foregroundColor: Colors.white,
+    backgroundColor: primaryColor,
     textStyle: const TextStyle(
       fontWeight: FontWeight.bold,
     ),
@@ -118,37 +119,36 @@ class _StartupScreenState extends State<StartupScreen> {
       // Load Environment variables
       await dotenv.load(fileName: "prod.env");
     }
-    final String? _AUTH_URL = dotenv.env['AUTH_URL'];
-    String? _AUTH_TOKEN = dotenv.env['AUTH_TOKEN'];
+    final String? AUTH_URL = dotenv.env['AUTH_URL'];
+    String? AUTH_TOKEN = dotenv.env['AUTH_TOKEN'];
 
-    if ((_AUTH_TOKEN?.isEmpty ?? true) && (_AUTH_URL?.isEmpty ?? true)) {
+    if ((AUTH_TOKEN?.isEmpty ?? true) && (AUTH_URL?.isEmpty ?? true)) {
       toastMsg("Please set the environment variables");
       throw Exception("Either AUTH_TOKEN or AUTH_URL is not set in .env file");
       return "";
     }
 
-    if ((_AUTH_TOKEN?.isNotEmpty ?? false) &&
-        (_AUTH_URL?.isNotEmpty ?? false)) {
+    if ((AUTH_TOKEN?.isNotEmpty ?? false) && (AUTH_URL?.isNotEmpty ?? false)) {
       toastMsg("Please set only one environment variable");
       throw Exception("Either AUTH_TOKEN or AUTH_URL can be set in .env file");
       return "";
     }
 
-    if (_AUTH_URL?.isNotEmpty ?? false) {
-      final Uri getTokenUrl = Uri.parse('$_AUTH_URL/get-token');
+    if (AUTH_URL?.isNotEmpty ?? false) {
+      final Uri getTokenUrl = Uri.parse('$AUTH_URL/get-token');
       final http.Response tokenResponse = await http.get(getTokenUrl);
-      _AUTH_TOKEN = json.decode(tokenResponse.body)['token'];
+      AUTH_TOKEN = json.decode(tokenResponse.body)['token'];
     }
 
     // log("Auth Token: $_AUTH_TOKEN");
 
-    return _AUTH_TOKEN ?? "";
+    return AUTH_TOKEN ?? "";
   }
 
   Future<void> onCreateMeetingButtonPressed() async {
-    final String? _VIDEOSDK_API_ENDPOINT = dotenv.env['VIDEOSDK_API_ENDPOINT'];
+    final String? VIDEOSDK_API_ENDPOINT = dotenv.env['VIDEOSDK_API_ENDPOINT'];
 
-    final Uri getMeetingIdUrl = Uri.parse('$_VIDEOSDK_API_ENDPOINT/meetings');
+    final Uri getMeetingIdUrl = Uri.parse('$VIDEOSDK_API_ENDPOINT/meetings');
     final http.Response meetingIdResponse =
         await http.post(getMeetingIdUrl, headers: {
       "Authorization": _token,
@@ -157,6 +157,14 @@ class _StartupScreenState extends State<StartupScreen> {
     _meetingID = json.decode(meetingIdResponse.body)['meetingId'];
 
     log("Meeting ID: $_meetingID");
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
 
     Navigator.push(
       context,
@@ -176,14 +184,18 @@ class _StartupScreenState extends State<StartupScreen> {
       return;
     }
 
-    final String? _VIDEOSDK_API_ENDPOINT = dotenv.env['VIDEOSDK_API_ENDPOINT'];
+    final String? VIDEOSDK_API_ENDPOINT = dotenv.env['VIDEOSDK_API_ENDPOINT'];
 
     final Uri validateMeetingUrl =
-        Uri.parse('$_VIDEOSDK_API_ENDPOINT/meetings/$_meetingID');
+        Uri.parse('$VIDEOSDK_API_ENDPOINT/meetings/$_meetingID');
     final http.Response validateMeetingResponse =
         await http.post(validateMeetingUrl, headers: {
       "Authorization": _token,
     });
+
+    if (!mounted) {
+      return;
+    }
 
     if (validateMeetingResponse.statusCode == 200) {
       Navigator.push(

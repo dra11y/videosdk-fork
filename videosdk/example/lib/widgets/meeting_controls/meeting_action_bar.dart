@@ -20,7 +20,7 @@ class MeetingActionBar extends StatelessWidget {
       onScreenShareButtonPressed;
 
   const MeetingActionBar({
-    Key? key,
+    super.key,
     required this.isMicEnabled,
     required this.isCamEnabled,
     required this.isScreenShareEnabled,
@@ -31,7 +31,7 @@ class MeetingActionBar extends StatelessWidget {
     required this.onSwitchCameraButtonPressed,
     required this.onScreenShareButtonPressed,
     required this.onMoreButtonPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +53,9 @@ class MeetingActionBar extends StatelessWidget {
           Expanded(
             child: MeetingActionButton(
               onPressed: onMicButtonPressed,
-              backgroundColor:
-                  isMicEnabled ? hoverColor : secondaryColor.withOpacity(0.8),
+              backgroundColor: isMicEnabled
+                  ? hoverColor
+                  : secondaryColor.withValues(alpha: 0.8),
               icon: isMicEnabled ? Icons.mic : Icons.mic_off,
             ),
           ),
@@ -63,8 +64,9 @@ class MeetingActionBar extends StatelessWidget {
           Expanded(
             child: MeetingActionButton(
               onPressed: onCameraButtonPressed,
-              backgroundColor:
-                  isCamEnabled ? hoverColor : secondaryColor.withOpacity(0.8),
+              backgroundColor: isCamEnabled
+                  ? hoverColor
+                  : secondaryColor.withValues(alpha: 0.8),
               icon: isCamEnabled ? Icons.videocam : Icons.videocam_off,
             ),
           ),
@@ -72,7 +74,7 @@ class MeetingActionBar extends StatelessWidget {
           // Camera Switch Control
           Expanded(
             child: MeetingActionButton(
-              backgroundColor: secondaryColor.withOpacity(0.8),
+              backgroundColor: secondaryColor.withValues(alpha: 0.8),
               onPressed: isCamEnabled ? onSwitchCameraButtonPressed : null,
               icon: Icons.cameraswitch,
             ),
@@ -83,7 +85,7 @@ class MeetingActionBar extends StatelessWidget {
             child: MeetingActionButton(
               backgroundColor: isScreenShareEnabled
                   ? hoverColor
-                  : secondaryColor.withOpacity(0.8),
+                  : secondaryColor.withValues(alpha: 0.8),
               onPressed: isScreenShareButtonDisabled
                   ? null
                   : onScreenShareButtonPressed,
@@ -98,7 +100,7 @@ class MeetingActionBar extends StatelessWidget {
           // More options
           Expanded(
             child: MeetingActionButton(
-              backgroundColor: secondaryColor.withOpacity(0.8),
+              backgroundColor: secondaryColor.withValues(alpha: 0.8),
               onPressed: onMoreButtonPressed,
               icon: Icons.more_vert,
             ),

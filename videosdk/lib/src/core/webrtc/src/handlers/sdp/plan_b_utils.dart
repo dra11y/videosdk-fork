@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:videosdk_webrtc/flutter_webrtc.dart';
 
 import '../../rtp_parameters.dart';
@@ -10,7 +11,7 @@ class PlanBUtils {
   ) {
     // First media SSRC (or the only one).
     int? firstSsrc;
-    Set<int> ssrcs = Set<int>();
+    Set<int> ssrcs = <int>{};
 
     for (Ssrc line in offerMediaObject.ssrcs ?? []) {
       if (line.attribute != 'msid') {
@@ -24,9 +25,7 @@ class PlanBUtils {
 
         ssrcs.add(ssrc);
 
-        if (firstSsrc == null) {
-          firstSsrc = ssrc;
-        }
+        firstSsrc ??= ssrc;
       }
     }
 
@@ -45,7 +44,7 @@ class PlanBUtils {
       List<String> tokens = line.ssrcs.split(' ');
 
       int? ssrc;
-      if (tokens.length > 0) {
+      if (tokens.isNotEmpty) {
         ssrc = int.parse(tokens.first);
       }
 
@@ -104,29 +103,24 @@ class PlanBUtils {
     String? streamId;
 
     // Get the SSRC.
-    Ssrc? ssrcMsidLine = (offerMediaObject.ssrcs ?? []).firstWhere(
-      (Ssrc line) {
-        if (line.attribute != 'msid') {
-          return false;
-        }
+    // Ssrc? ssrcMsidLine = (offerMediaObject.ssrcs ?? []).firstWhereOrNull(
+    //   (Ssrc line) {
+    //     if (line.attribute != 'msid') {
+    //       return false;
+    //     }
 
-        String trackId = line.value.split(' ')[1];
+    //     String trackId = line.value.split(' ')[1];
 
-        if (trackId == track.id) {
-          firstSsrc = line.id;
-          streamId = line.value.split(' ')[0];
+    //     if (trackId == track.id) {
+    //       firstSsrc = line.id;
+    //       streamId = line.value.split(' ')[0];
 
-          return true;
-        } else {
-          return false;
-        }
-      },
-      orElse: () => null as Ssrc,
-    );
-
-    if (ssrcMsidLine == null) {
-      throw ('a=ssrc line with msid information not found [track.id:${track.id}]');
-    }
+    //       return true;
+    //     } else {
+    //       return false;
+    //     }
+    //   },
+    // );
 
     // Get the SSRC for RTX.
     (offerMediaObject.ssrcGroups ?? []).any((SsrcGroup line) {
@@ -145,9 +139,8 @@ class PlanBUtils {
       }
     });
 
-    Ssrc? ssrcCnameLine = offerMediaObject.ssrcs?.firstWhere(
+    Ssrc? ssrcCnameLine = offerMediaObject.ssrcs?.firstWhereOrNull(
       (Ssrc line) => line.attribute == 'cname' && line.id == firstSsrc,
-      orElse: () => null as Ssrc,
     );
 
     if (ssrcCnameLine == null) {

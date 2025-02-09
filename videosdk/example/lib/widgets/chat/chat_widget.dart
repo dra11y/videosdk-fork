@@ -6,8 +6,7 @@ class ChatWidget extends StatelessWidget {
   final bool isLocalParticipant;
   final PubSubMessage message;
   const ChatWidget(
-      {Key? key, required this.isLocalParticipant, required this.message})
-      : super(key: key);
+      {super.key, required this.isLocalParticipant, required this.message});
 
   @override
   Widget build(BuildContext context) {

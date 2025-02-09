@@ -24,17 +24,17 @@ class MeetingScreen extends StatefulWidget {
   final String meetingId, token, displayName;
   final bool micEnabled, camEnabled, chatEnabled;
   const MeetingScreen({
-    Key? key,
+    super.key,
     required this.meetingId,
     required this.token,
     required this.displayName,
     this.micEnabled = true,
     this.camEnabled = true,
     this.chatEnabled = true,
-  }) : super(key: key);
+  });
 
   @override
-  _MeetingScreenState createState() => _MeetingScreenState();
+  State<MeetingScreen> createState() => _MeetingScreenState();
 }
 
 class _MeetingScreenState extends State<MeetingScreen> {
@@ -109,7 +109,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
       maxResolution: 'hd',
       defaultCameraIndex: 0,
       multiStream: false,
-      mode: Mode.CONFERENCE,
+      mode: Mode.SEND_AND_RECV,
       customCameraVideoTrack: videoTrack, // custom video track :: optional
       customMicrophoneAudioTrack: audioTrack, // custom audio track :: optional
       notification: const NotificationInfo(
@@ -132,12 +132,13 @@ class _MeetingScreenState extends State<MeetingScreen> {
     final statusbarHeight = MediaQuery.of(context).padding.top;
 
     log("Meeting Data: ${widget.meetingId} ${widget.token}");
-    return WillPopScope(
-      onWillPop: _onWillPopScope,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) => _onWillPopScope(),
       child: _joined
           ? Scaffold(
-              backgroundColor:
-                  Theme.of(context).scaffoldBackgroundColor.withOpacity(0.8),
+              backgroundColor: Theme.of(context)
+                  .scaffoldBackgroundColor
+                  .withValues(alpha: 0.8),
               floatingActionButton: MeetingActionBar(
                 isMicEnabled: audioStream != null,
                 isCamEnabled: videoStream != null,
@@ -175,10 +176,10 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 },
                 // Called when switch camera button is pressed
                 onSwitchCameraButtonPressed: () async {
-                  final selectedCamId = meeting.selectedCamId;
+                  final selectedCam = meeting.selectedCam;
 
                   VideoDeviceInfo deviceToSwitch = cameras!.firstWhere(
-                    (cam) => cam.deviceId != selectedCamId,
+                    (cam) => cam.deviceId != selectedCam?.deviceId,
                   );
 
                   meeting.changeCam(deviceToSwitch);
@@ -232,9 +233,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
                                             children: mics!
                                                 .map(
                                                   (e) => ElevatedButton(
-                                                    child: Text(e.label +
-                                                        "  " +
-                                                        e.deviceId),
+                                                    child: Text(
+                                                        "${e.label}  ${e.deviceId}"),
                                                     onPressed: () => {
                                                       meeting.changeMic(e),
                                                       Navigator.pop(context)
@@ -270,9 +270,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
                                             children: speakers!
                                                 .map(
                                                   (e) => ElevatedButton(
-                                                    child: Text(e.label +
-                                                        " " +
-                                                        e.deviceId),
+                                                    child: Text(
+                                                        "${e.label} ${e.deviceId}"),
                                                     onPressed: () => {
                                                       meeting
                                                           .switchAudioDevice(e),
@@ -289,7 +288,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                                 );
                               },
                             ),
-                        
+
                             ElevatedButton(
                               child: const Text('CHANGE Video DEVICE'),
                               onPressed: () {
@@ -372,11 +371,11 @@ class _MeetingScreenState extends State<MeetingScreen> {
                               child: const Text('Change Mode'),
                               onPressed: () async {
                                 if (meeting.localParticipant.mode ==
-                                    Mode.CONFERENCE) {
-                                  meeting.changeMode(Mode.VIEWER);
+                                    Mode.SEND_AND_RECV) {
+                                  meeting.changeMode(Mode.RECV_ONLY);
                                 } else if (meeting.localParticipant.mode ==
-                                    Mode.VIEWER) {
-                                  meeting.changeMode(Mode.CONFERENCE);
+                                    Mode.RECV_ONLY) {
+                                  meeting.changeMode(Mode.SEND_AND_RECV);
                                 }
                                 Navigator.pop(context);
                               },
@@ -488,8 +487,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
                               onPressed: () async {
                                 print(
                                     "selected mic id ${meeting.selectedMic?.deviceId} ${meeting.selectedMic?.label}");
-                                print("selected Camera id" +
-                                    meeting.selectedCamId!);
+                                print(
+                                    "selected Camera id${meeting.selectedCam!.deviceId}");
                                 print(
                                     "selected speaker ${meeting.selectedSpeaker?.deviceId} ${meeting.selectedSpeaker?.label}");
                                 Navigator.pop(context);
@@ -559,7 +558,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                                 Navigator.pop(context);
                               },
                             ),
-                        
+
                             //check selected devices
                           ],
                         ),
@@ -614,7 +613,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
                           width: 350,
                           child: WebViewWidget(
                             controller: controller,
-                                                
                           ),
                         ),
                       Expanded(
@@ -649,11 +647,13 @@ class _MeetingScreenState extends State<MeetingScreen> {
     });
 
     character.on(Events.characterMessage, (CharacterMessage message) {
-      print("character Message ${message.text} ${message.characterId} ${message.characterName} ${message.runtimeType}");
+      print(
+          "character Message ${message.text} ${message.characterId} ${message.characterName} ${message.runtimeType}");
     });
 
     character.on(Events.userMessage, (UserMessage message) {
-      print("user Message ${message.text} ${message.participantId} ${message.participantName} ${message.runtimeType}");
+      print(
+          "user Message ${message.text} ${message.participantId} ${message.participantName} ${message.runtimeType}");
     });
 
     character.on(Events.characterStateChanged, (CharacterState state) {
@@ -665,7 +665,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
     });
   }
 
-  void registerMeetingEvents(Room _meeting) {
+  void registerMeetingEvents(Room meeting) {
     VideoSDK.on(Events.deviceChanged, () async {
       cameras = await VideoSDK.getVideoDevices();
       List<AudioDeviceInfo>? audioDeviceInfo = await VideoSDK.getAudioDevices();
@@ -684,11 +684,11 @@ class _MeetingScreenState extends State<MeetingScreen> {
       }
     });
     // Called when joined in meeting
-    _meeting.on(
+    meeting.on(
       Events.roomJoined,
       () async {
         setState(() {
-          meeting = _meeting;
+          meeting = meeting;
           _joined = true;
         });
 
@@ -710,7 +710,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
     );
 
     // Called when meeting is ended
-    _meeting.on(Events.roomLeft, (String? errorMsg) {
+    meeting.on(Events.roomLeft, (String? errorMsg) {
       if (errorMsg != null) {
         toastMsg("Meeting left due to $errorMsg !!");
       }
@@ -720,33 +720,31 @@ class _MeetingScreenState extends State<MeetingScreen> {
           (route) => false);
     });
 
-    _meeting.on(Events.roomStateChanged, (RoomState state) {
-        switch (state) {
-          case RoomState.connecting:
-            print('Meeting is Connecting');
-            break;
-          case RoomState.connected:
-            print('Meeting is Connected');
-            break;
-          case RoomState.disconnected:
-            print('Meeting connection disconnected abruptly');
-            break;
-          case RoomState.failed:
-            print('Meeting connection failed');
-            break;
-          case RoomState.closing:
-            print('Meeting is closing');
-            break;
-          case RoomState.closed:
-            print('Meeting connection closed');
-            break;
-          default:
-            print('default');
-        }
+    meeting.on(Events.roomStateChanged, (RoomState state) {
+      switch (state) {
+        case RoomState.connecting:
+          print('Meeting is Connecting');
+          break;
+        case RoomState.connected:
+          print('Meeting is Connected');
+          break;
+        case RoomState.disconnected:
+          print('Meeting connection disconnected abruptly');
+          break;
+        case RoomState.failed:
+          print('Meeting connection failed');
+          break;
+        case RoomState.closing:
+          print('Meeting is closing');
+          break;
+        case RoomState.closed:
+          print('Meeting connection closed');
+          break;
+      }
     });
 
     // Called when recording is started
-    _meeting.on(Events.recordingStarted, () {
+    meeting.on(Events.recordingStarted, () {
       toastMsg("Meeting recording started.");
 
       setState(() {
@@ -754,12 +752,12 @@ class _MeetingScreenState extends State<MeetingScreen> {
       });
     });
 
-    _meeting.on(Events.recordingStateChanged, (String status) {
+    meeting.on(Events.recordingStateChanged, (String status) {
       toastMsg("Meeting recording status : $status");
     });
 
     // Called when recording is stopped
-    _meeting.on(Events.recordingStopped, () {
+    meeting.on(Events.recordingStopped, () {
       toastMsg("Meeting recording stopped.");
 
       setState(() {
@@ -767,7 +765,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
       });
     });
 
-    _meeting.on(Events.whiteboardStarted, (url) {
+    meeting.on(Events.whiteboardStarted, (url) {
       toastMsg("Whiteboard started $url .");
       print("Whiteboard url: $url");
 
@@ -775,7 +773,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..loadRequest(
           Uri.parse(url),
-           
         );
 
       setState(() {
@@ -784,7 +781,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
     });
 
     // Called when recording is stopped
-    _meeting.on(Events.whiteboardStopped, () {
+    meeting.on(Events.whiteboardStopped, () {
       toastMsg("Whiteboard stopped.");
 
       setState(() {
@@ -792,9 +789,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
       });
     });
 
-
     // Called when LiveStreaming is started
-    _meeting.on(Events.liveStreamStarted, () {
+    meeting.on(Events.liveStreamStarted, () {
       toastMsg("Meeting live streaming started.");
 
       setState(() {
@@ -802,13 +798,13 @@ class _MeetingScreenState extends State<MeetingScreen> {
       });
     });
 
-    _meeting.on(Events.error, (error) {
+    meeting.on(Events.error, (error) {
       print(
           "VIDEOSDK ERROR :: ${error['code']}  :: ${error['name']} :: ${error['message']}");
     });
 
     // Called when LiveStreaming is stopped
-    _meeting.on(Events.liveStreamStopped, () {
+    meeting.on(Events.liveStreamStopped, () {
       toastMsg("Meeting live streaming stopped.");
 
       setState(() {
@@ -816,38 +812,39 @@ class _MeetingScreenState extends State<MeetingScreen> {
       });
     });
 
-    _meeting.on(Events.liveStreamStateChanged, (String status) {
+    meeting.on(Events.liveStreamStateChanged, (String status) {
       toastMsg("Meeting live streaming status : $status");
     });
 
     // Called when HLS is started
-    _meeting.on(Events.hlsStarted, (downstreamUrl) {
+    meeting.on(Events.hlsStarted, (downstreamUrl) {
       toastMsg("Meeting HLS started.");
-      log("DOWNSTREAM URL -- " + downstreamUrl);
+      log("DOWNSTREAM URL -- $downstreamUrl");
       setState(() {
         isHlsOn = true;
       });
     });
 
     // Called when LiveStreaming is stopped
-    _meeting.on(Events.hlsStopped, () {
+    meeting.on(Events.hlsStopped, () {
       toastMsg("Meeting HLS stopped.");
       setState(() {
         isHlsOn = false;
       });
     });
 
-    _meeting.on(Events.hlsStateChanged, (Map<String, dynamic> data) {
+    meeting.on(Events.hlsStateChanged, (Map<String, dynamic> data) {
       toastMsg("Meeting HLS status : ${data['status']}");
-      if (data['status'] == "HLS_STARTED")
-        log("DOWNSTREAM URL -- " + data['downstreamUrl']);
+      if (data['status'] == "HLS_STARTED") {
+        log("DOWNSTREAM URL -- ${data['downstreamUrl']}");
+      }
     });
 
     // Called when mic is requested
-    _meeting.on(Events.micRequested, (_data) {
-      log("_data => $_data");
-      dynamic accept = _data['accept'];
-      dynamic reject = _data['reject'];
+    meeting.on(Events.micRequested, (data) {
+      log("_data => $data");
+      dynamic accept = data['accept'];
+      dynamic reject = data['reject'];
 
       log("accept => $accept reject => $reject");
 
@@ -880,10 +877,10 @@ class _MeetingScreenState extends State<MeetingScreen> {
     });
 
     // Called when camera is requested
-    _meeting.on(Events.cameraRequested, (_data) {
-      log("_data => $_data");
-      dynamic accept = _data['accept'];
-      dynamic reject = _data['reject'];
+    meeting.on(Events.cameraRequested, (data) {
+      log("_data => $data");
+      dynamic accept = data['accept'];
+      dynamic reject = data['reject'];
 
       log("accept => $accept reject => $reject");
 
@@ -916,33 +913,33 @@ class _MeetingScreenState extends State<MeetingScreen> {
     });
 
     // Called when stream is enabled
-    _meeting.localParticipant.on(Events.streamEnabled, (Stream _stream) {
-      if (_stream.kind == 'video') {
+    meeting.localParticipant.on(Events.streamEnabled, (Stream stream) {
+      if (stream.kind == 'video') {
         setState(() {
-          videoStream = _stream;
+          videoStream = stream;
         });
-      } else if (_stream.kind == 'audio') {
+      } else if (stream.kind == 'audio') {
         setState(() {
-          audioStream = _stream;
+          audioStream = stream;
         });
-      } else if (_stream.kind == 'share') {
+      } else if (stream.kind == 'share') {
         setState(() {
-          shareStream = _stream;
+          shareStream = stream;
         });
       }
     });
 
     // Called when stream is disabled
-    _meeting.localParticipant.on(Events.streamDisabled, (Stream _stream) {
-      if (_stream.kind == 'video' && videoStream?.id == _stream.id) {
+    meeting.localParticipant.on(Events.streamDisabled, (Stream stream) {
+      if (stream.kind == 'video' && videoStream?.id == stream.id) {
         setState(() {
           videoStream = null;
         });
-      } else if (_stream.kind == 'audio' && audioStream?.id == _stream.id) {
+      } else if (stream.kind == 'audio' && audioStream?.id == stream.id) {
         setState(() {
           audioStream = null;
         });
-      } else if (_stream.kind == 'share' && shareStream?.id == _stream.id) {
+      } else if (stream.kind == 'share' && shareStream?.id == stream.id) {
         setState(() {
           shareStream = null;
         });
@@ -950,19 +947,19 @@ class _MeetingScreenState extends State<MeetingScreen> {
     });
 
     // Called when presenter is changed
-    _meeting.on(Events.presenterChanged, (_activePresenterId) {
+    meeting.on(Events.presenterChanged, (activePresenterId) {
       Participant? activePresenterParticipant =
-          _meeting.participants[_activePresenterId];
+          meeting.participants[activePresenterId];
 
       // Get Share Stream
-      Stream? _stream = activePresenterParticipant?.streams.values
+      Stream? stream = activePresenterParticipant?.streams.values
           .singleWhere((e) => e.kind == "share");
 
-      setState(() => remoteParticipantShareStream = _stream);
+      setState(() => remoteParticipantShareStream = stream);
     });
 
     //Entry Event
-    _meeting.on(Events.entryRequested, (data) {
+    meeting.on(Events.entryRequested, (data) {
       // var participantId = data['participantId'];
       var name = data["name"];
       var allow = data["allow"];
@@ -994,10 +991,10 @@ class _MeetingScreenState extends State<MeetingScreen> {
       );
     });
 
-    _meeting.on(Events.entryResponded, (data) {
+    meeting.on(Events.entryResponded, (data) {
       var id = data['id'];
       var decision = data['decision'];
-      if (id == _meeting.localParticipant.id) {
+      if (id == meeting.localParticipant.id) {
         if (decision == 'allowed') {
           toastMsg("Allowed to join the meeting.");
         } else {
@@ -1007,14 +1004,9 @@ class _MeetingScreenState extends State<MeetingScreen> {
       }
     });
 
-    _meeting.on(Events.error, (error) {
-      log("VIDEOSDK ERROR :: " +
-          error['code'].toString() +
-          "  :: " +
-          error['name'].toString() +
-          " :: " +
-          error['message'].toString());
-      toastMsg("VIDEOSDK ERROR :: " + error['message'].toString());
+    meeting.on(Events.error, (error) {
+      log("VIDEOSDK ERROR :: ${error['code']}  :: ${error['name']} :: ${error['message']}");
+      toastMsg("VIDEOSDK ERROR :: ${error['message']}");
     });
   }
 

@@ -23,7 +23,7 @@ class Ortc {
     }
 
     // parameter is optional. If unset set it to an empty string.
-    if (fb.parameter == null || fb.parameter.isEmpty == true) {
+    if (fb.parameter.isEmpty == true) {
       fb.parameter = '';
     }
   }
@@ -46,7 +46,7 @@ class Ortc {
     Iterable<RegExpMatch> mimeTypeMatch =
         mimeTypeRegex.allMatches(codec.mimeType);
 
-    if (mimeTypeMatch == null || mimeTypeMatch.isEmpty) {
+    if (mimeTypeMatch.isEmpty) {
       throw ('invalid codec.mimeType');
     }
 
@@ -66,9 +66,7 @@ class Ortc {
 
     // channels is optional. If unset, set it to 1 (just if audio).
     if (codec.kind == RTCRtpMediaType.RTCRtpMediaTypeAudio) {
-      if (codec.channels == null) {
-        codec.channels = 1;
-      }
+      codec.channels ??= 1;
     } else {
       codec.channels = null;
     }
@@ -138,14 +136,10 @@ class Ortc {
     }
 
     // preferredEncrypt is optional. If unset set it to false.
-    if (ext.preferredEncrypt == null) {
-      ext.preferredEncrypt = false;
-    }
+    ext.preferredEncrypt ??= false;
 
     // direction is optional. If unset set it to sendrecv.
-    if (ext.direction == null) {
-      ext.direction = RtpHeaderDirection.SendRecv;
-    }
+    ext.direction ??= RtpHeaderDirection.SendRecv;
   }
 
   /// Validates RtpCapabilities. It may modify given data by adding missing
@@ -202,9 +196,7 @@ class Ortc {
     }
 
     // encrypt is optional. If unset set it to false.
-    if (ext.encrypt == null) {
-      ext.encrypt = false;
-    }
+    ext.encrypt ??= false;
 
     // // parameters is optional. If unset, set it to an empty object.
     // if (ext.parameters == null) {
@@ -229,11 +221,6 @@ class Ortc {
   /// fields with default values.
   /// It throws if invalid.
   static void validateRtpEncodingParameters(RtpEncodingParameters encoding) {
-    if (encoding == null) {
-      throw ('encoding is not an object');
-    }
-
-    // ssrc is optional.
     if (encoding.rtx != null) {
       if (encoding.rtx?.ssrc == null) {
         throw ('missing encoding.rtx.ssrc');
@@ -241,9 +228,7 @@ class Ortc {
     }
 
     // dtx is optional. If unset set it to false.
-    if (encoding.dtx == null) {
-      encoding.dtx = false;
-    }
+    encoding.dtx ??= false;
   }
 
   /// Validates RtcpParameters. It may modify given data by adding missing
@@ -255,9 +240,8 @@ class Ortc {
     }
 
     // reducedSize is optional. If unset set it to true.
-    if (rtcp.reducedSize == null) {
-      rtcp.reducedSize = true;
-    }
+    // it seems it is no longer optional
+    // rtcp.reducedSize ??= true;
   }
 
   /// Validates RtpCodecParameters. It may modify given data by adding missing
@@ -276,12 +260,8 @@ class Ortc {
     //   throw ('missing codec.mimeType');
     // }
 
-    final Iterable<RegExpMatch>? mimeTypeMatch =
+    final Iterable<RegExpMatch> mimeTypeMatch =
         mimeTypeRegex.allMatches(codec.mimeType);
-
-    if (mimeTypeMatch == null) {
-      throw ('invalid codec.mimeType');
-    }
 
     // payloadType is mandatory.
     // if (codec.payloadType == null) {
@@ -298,9 +278,7 @@ class Ortc {
 
     // channels is optional. If unset, set it to 1 (just if audio).
     if (kind == RTCRtpMediaType.RTCRtpMediaTypeAudio) {
-      if (codec.channels == null) {
-        codec.channels = 1;
-      }
+      codec.channels ??= 1;
     } else {
       codec.channels = null;
     }
@@ -372,9 +350,7 @@ class Ortc {
     }
 
     // rtcp is optional. If unset, fill with an empty object.
-    if (params.rtcp == null) {
-      params.rtcp = RtcpParameters(reducedSize: true, cname: '', mux: false);
-    }
+    params.rtcp ??= RtcpParameters(reducedSize: true, cname: '', mux: false);
 
     validateRtcpParameters(params.rtcp);
   }
@@ -835,7 +811,7 @@ class Ortc {
     for (ExtendedRtpHeaderExtension extendedExtension
         in extendedRtpCapabilities.headerExtensions) {
       // Ignore RTP extensions of a different kind and those not valid for sending.
-      if ((extendedExtension.kind != null && extendedExtension.kind != kind) ||
+      if ((extendedExtension.kind != kind) ||
           (extendedExtension.direction != RtpHeaderDirection.SendRecv &&
               extendedExtension.direction != RtpHeaderDirection.SendOnly)) {
         continue;
@@ -995,7 +971,7 @@ class Ortc {
     for (ExtendedRtpHeaderExtension extendedExtension
         in extendedRtpCapabilities.headerExtensions) {
       // Ignore RTP extensions of a different kind and those not valid for sending.
-      if ((extendedExtension.kind != null && extendedExtension.kind != kind) ||
+      if ((extendedExtension.kind != kind) ||
           (extendedExtension.direction != RtpHeaderDirection.SendRecv &&
               extendedExtension.direction != RtpHeaderDirection.SendOnly)) {
         continue;

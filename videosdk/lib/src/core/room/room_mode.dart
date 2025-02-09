@@ -1,10 +1,11 @@
 // Mode
 enum Mode {
-  //  @deprecated CONFERENCE mode is deprecated and will be removed in future versions. Use SEND_AND_RECV mode instead.
-  @deprecated
+  @Deprecated(
+      'CONFERENCE mode is deprecated and will be removed in future versions. Use SEND_AND_RECV mode instead.')
   CONFERENCE,
-  // @deprecated CONFERENCE mode is deprecated and will be removed in future versions. Use SEND_AND_RECV mode instead. */
-  @deprecated
+
+  @Deprecated(
+      'VIEWER mode is deprecated and will be removed in future versions. Use SIGNALLING_ONLY mode instead.')
   VIEWER,
 
   SEND_AND_RECV,
@@ -23,17 +24,14 @@ Map<Mode, String> modesMap = {
 extension ModeExtension on Mode {
   String parseToString() => modesMap[this] ?? 'SEND_AND_RECV';
   static Mode parseToEnum(String mode) {
-    print("Mode : ${mode}");
-    return mode == "SEND_AND_RECV"
-        ? Mode.SEND_AND_RECV
-        : mode == "SIGNALLING_ONLY"
-            ? Mode.SIGNALLING_ONLY
-            : mode == "RECV_ONLY"
-                ? Mode.RECV_ONLY
-                : mode == "CONFERENCE"
-                    ? Mode.CONFERENCE
-                    : mode == "VIEWER"
-                        ? Mode.VIEWER
-                        : Mode.SEND_AND_RECV;
+    print("Mode : $mode");
+    return switch (mode) {
+      'SEND_AND_RECV' => Mode.SEND_AND_RECV,
+      'SIGNALLING_ONLY' => Mode.SIGNALLING_ONLY,
+      'RECV_ONLY' => Mode.RECV_ONLY,
+      'CONFERENCE' => Mode.CONFERENCE,
+      'VIEWER' => Mode.VIEWER,
+      _ => Mode.SEND_AND_RECV,
+    };
   }
 }

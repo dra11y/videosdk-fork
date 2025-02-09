@@ -1,5 +1,5 @@
 import 'dart:developer';
-import 'dart:math' as Math;
+import 'dart:math' as math;
 
 import 'package:videosdk/src/core/room/custom_track_configs.dart';
 import 'package:videosdk/src/core/room/open_telemetry/videosdk_log.dart';
@@ -11,14 +11,14 @@ class SdkCapabilities {
   static List<dynamic> getResolutionScalings(List<dynamic> encodings) {
     List<dynamic> resolutionScalings = [];
 
-    if (encodings.length == 0) {
+    if (encodings.isEmpty) {
       return resolutionScalings;
     }
 
     if (encodings.length == 1) {
       const spatialLayers = 3;
       for (int i = 0; i < spatialLayers; i++) {
-        resolutionScalings.add(Math.pow(2, (spatialLayers - i - 1)));
+        resolutionScalings.add(math.pow(2, (spatialLayers - i - 1)));
       }
 
       return resolutionScalings;
@@ -27,27 +27,27 @@ class SdkCapabilities {
     // Simulcast encodings
     bool scaleResolutionDownByDefined = false;
 
-    encodings.forEach((encoding) {
+    for (var encoding in encodings) {
       if (encoding['scaleResolutionDownBy'] != null) {
         // at least one scaleResolutionDownBy is defined
         scaleResolutionDownByDefined = true;
         // scaleResolutionDownBy must be >= 1.0
         resolutionScalings
-            .add(Math.max(1, encoding['scaleResolutionDownBy'] as num));
+            .add(math.max(1, encoding['scaleResolutionDownBy'] as num));
       } else {
         // If encodings contains any encoding whose scaleResolutionDownBy
         // attribute is defined, set any undefined scaleResolutionDownBy
         // of the other encodings to 1.0.
         resolutionScalings.add(1.0);
       }
-    });
+    }
 
     // If the scaleResolutionDownBy attribues of sendEncodings are
     // still undefined, initialize each encoding's scaleResolutionDownBy
     // to 2^(length of sendEncodings - encoding index - 1).
     if (!scaleResolutionDownByDefined) {
       for (var i = 0; i < encodings.length; i++) {
-        resolutionScalings[i] = Math.pow(2, encodings.length - i - 1);
+        resolutionScalings[i] = math.pow(2, encodings.length - i - 1);
       }
     }
 
@@ -56,7 +56,7 @@ class SdkCapabilities {
 
   static Map<String, dynamic>? getAdaptivePreferredLayers(
       Consumer consumer, viewportWidth, viewportHeight) {
-    Map<String, dynamic> result = new Map();
+    Map<String, dynamic> result = {};
     result.putIfAbsent('consumerId', () => consumer.id);
     try {
       int width = consumer.appData['width'];
@@ -144,7 +144,7 @@ class SdkCapabilities {
       midPreset = presets.elementAt(1);
     }
 
-    int size = Math.max(width, height);
+    int size = math.max(width, height);
     if (size >= 960 && midPreset != null) {
       return encodingsFromPresets(
           width, height, [lowPreset, midPreset, original]);
@@ -186,13 +186,13 @@ class SdkCapabilities {
       }
       Map<String, dynamic> preset = presets[i];
 
-      int size = Math.max(width, height);
+      int size = math.max(width, height);
       String rid = videoRids[i];
 
       RtpEncodingParameters encoding = RtpEncodingParameters(
           rid: rid,
           scaleResolutionDownBy:
-              size / Math.min(preset['width'], preset['height']),
+              size / math.min(preset['width'], preset['height']),
           maxBitrate: (preset["encoding"] as RtpEncodingParameters).maxBitrate,
           maxFramerate:
               (preset["encoding"] as RtpEncodingParameters).maxFramerate);
@@ -208,7 +208,7 @@ class SdkCapabilities {
         presetsForResolution(isScreenShare, width, height);
     RtpEncodingParameters encoding = presets[0]['encoding'];
 
-    int size = Math.max(width, height);
+    int size = math.max(width, height);
 
     for (int i = 0; i < presets.length; i++) {
       Map<String, dynamic> preset = presets[i];

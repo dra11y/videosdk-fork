@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:videosdk/src/core/room/open_telemetry/videosdk_log.dart';
 
-import 'EnhancedEventEmitter.dart';
+import 'enhanced_event_emitter.dart';
 import 'logger.dart';
 import 'message.dart';
-import 'transports/TransportInterface.dart';
-export 'transports/NativeTransport.dart'
+import 'transports/transport_interface.dart';
+export 'transports/native_transport.dart'
     if (dart.library.html) 'transports/WebTransport.dart';
 
-final logger = new Logger('Peer');
+final logger = Logger('Peer');
 
 class Peer extends EnhancedEventEmitter {
   // Closed flag.
@@ -19,10 +19,10 @@ class Peer extends EnhancedEventEmitter {
   bool _connected = false;
 
   // Custom data object.
-  dynamic _data = {};
+  final dynamic _data = {};
 
   // Map of pending sent request objects indexed by request id.
-  var _sents = Map<String, dynamic>();
+  final _sents = <String, dynamic>{};
 
   // Transport.
   late TransportInterface _transport;
@@ -43,15 +43,15 @@ class Peer extends EnhancedEventEmitter {
   dynamic get data => _data;
 
   close() {
-    if (this._closed) return;
+    if (_closed) return;
 
     logger.debug('close()');
 
-    this._closed = true;
-    this._connected = false;
+    _closed = true;
+    _connected = false;
 
     // close transport
-    this._transport.close();
+    _transport.close();
 
     // Close every pending sent.
     _sents.forEach((key, sent) {
@@ -59,21 +59,20 @@ class Peer extends EnhancedEventEmitter {
     });
 
     // Emit 'close' event.
-    this.safeEmit('close');
+    safeEmit('close');
   }
 
   /// Send a protoo request to the server-side Room.
   request(method, data) async {
-    final completer = new Completer();
+    final completer = Completer();
     final request = Message.createRequest(method, data);
     final requestId = request['id'].toString();
-    logger.debug(
-        'request() [method:' + method.toString() + ', id: ' + requestId + ']');
+    logger.debug('request() [method:$method, id: $requestId]');
 
     // This may throw.
-    await this._transport.send(request);
+    await _transport.send(request);
 
-    int timeout = (1500 * (15 + (0.1 * this._sents.length))).toInt();
+    int timeout = (1500 * (15 + (0.1 * _sents.length))).toInt();
     final sent = {
       'id': request['id'],
       'method': request['method'],
@@ -89,9 +88,8 @@ class Peer extends EnhancedEventEmitter {
         sent['timer'].cancel();
         completer.completeError(error);
       },
-      'timer': new Timer.periodic(new Duration(milliseconds: timeout),
-          (Timer timer) {
-        if (this._sents.remove(requestId) == null) return;
+      'timer': Timer.periodic(Duration(milliseconds: timeout), (Timer timer) {
+        if (_sents.remove(requestId) == null) return;
 
         completer.completeError('request timeout');
       }),
@@ -107,14 +105,14 @@ class Peer extends EnhancedEventEmitter {
   }
 
   _handleTransport() {
-    if (this._transport.closed) {
-      this._closed = true;
+    if (_transport.closed) {
+      _closed = true;
 
       Future.delayed(Duration(seconds: 0), () {
         if (!_closed) {
-          this._connected = false;
+          _connected = false;
 
-          this.safeEmit('close');
+          safeEmit('close');
         }
       });
 
@@ -122,48 +120,48 @@ class Peer extends EnhancedEventEmitter {
     }
 
     _transport.on('connecting', (currentAttempt) {
-      logger.debug('emit "connecting" [currentAttempt:' + currentAttempt + ']');
-      this.safeEmit('connecting', currentAttempt);
+      logger.debug('emit "connecting" [currentAttempt:$currentAttempt]');
+      safeEmit('connecting', currentAttempt);
     });
 
     _transport.on('open', () {
       if (_closed) return;
       logger.debug('emit "open"');
 
-      this._connected = true;
+      _connected = true;
 
-      this.safeEmit('open');
+      safeEmit('open');
     });
 
     _transport.on('disconnected', () {
       if (_closed) return;
       logger.debug('emit "disconnected"');
 
-      this._connected = false;
+      _connected = false;
 
-      this.safeEmit('disconnected');
+      safeEmit('disconnected');
     });
 
     _transport.on('failed', (currentAttempt) {
       if (_closed) return;
-      logger.debug('emit "failed" [currentAttempt:' + currentAttempt + ']');
+      logger.debug('emit "failed" [currentAttempt:$currentAttempt]');
 
-      this._connected = false;
+      _connected = false;
 
-      this.safeEmit('failed', currentAttempt);
+      safeEmit('failed', currentAttempt);
     });
 
     _transport.on('close', () {
-      if (this._closed) return;
-      this._closed = true;
+      if (_closed) return;
+      _closed = true;
       logger.debug('emit "close"');
 
-      this._connected = false;
+      _connected = false;
 
-      this.safeEmit('close');
+      safeEmit('close');
     });
 
-    this._transport.on('message', (message) {
+    _transport.on('message', (message) {
       if (message['request'] != null && message['request'] == true) {
         _handleRequest(message);
       } else if (message['response'] != null && message['response'] == true) {
@@ -187,15 +185,15 @@ class Peer extends EnhancedEventEmitter {
               message: "Error in accept() \n ${error.toString()}",
               logLevel: "ERROR");
           //
-          logger.warn('accept() failed, response could not be sent: ' + error);
+          logger.warn('accept() failed, response could not be sent: $error');
         });
       },
           // reject() function.
           (errorCode, errorReason) {
-        if (!(errorCode is num)) {
+        if (errorCode is! num) {
           errorReason = errorCode.toString();
           errorCode = 500;
-        } else if (errorCode is num && errorReason is String) {
+        } else if (errorReason is String) {
           errorReason = errorReason.toString();
         }
 
@@ -208,7 +206,7 @@ class Peer extends EnhancedEventEmitter {
               message: "Error in reject() \n ${error.toString()}",
               logLevel: "ERROR");
           //
-          logger.warn('reject() failed, response could not be sent: ' + error);
+          logger.warn('reject() failed, response could not be sent: $error');
         });
       });
     } catch (error) {
@@ -220,7 +218,7 @@ class Peer extends EnhancedEventEmitter {
       final response =
           Message.createErrorResponse(request, 500, error.toString());
 
-      this._transport.send(response).catchError(() => {});
+      _transport.send(response).catchError((error) => {});
     }
   }
 
@@ -245,12 +243,12 @@ class Peer extends EnhancedEventEmitter {
   }
 
   _handleNotification(notification) {
-    this.safeEmit('notification', notification);
+    safeEmit('notification', notification);
   }
 
   notify(method, data) {
     var notification = Message.createNotification(method, data);
-    logger.debug('notify() [method:' + method + ']');
-    return this._transport.send(notification);
+    logger.debug('notify() [method:$method]');
+    return _transport.send(notification);
   }
 }

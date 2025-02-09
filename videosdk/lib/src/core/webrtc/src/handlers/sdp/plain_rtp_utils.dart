@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:videosdk_webrtc/flutter_webrtc.dart';
 
 import '../../handlers/sdp/media_section.dart';
@@ -10,14 +11,11 @@ class PlainRtpUtils {
     SdpObject sdpObject,
     RTCRtpMediaType kind,
   ) {
+    final mtype = RTCRtpMediaTypeExtension.value(kind);
     MediaObject? mediaObject = sdpObject.media.firstWhere(
-      (MediaObject m) => m.type == RTCRtpMediaTypeExtension.value(kind),
-      orElse: () => null as MediaObject,
+      (MediaObject m) => m.type == mtype,
+      orElse: () => throw 'cannot find media with type $mtype',
     );
-
-    if (mediaObject == null) {
-      throw ('m=${RTCRtpMediaTypeExtension.value(kind)} section not found');
-    }
 
     Connection connectionObject =
         (mediaObject.connection ?? sdpObject.connection)!;
@@ -35,16 +33,11 @@ class PlainRtpUtils {
     SdpObject sdpObject,
     RTCRtpMediaType kind,
   ) {
-    MediaObject? mediaObject = sdpObject.media.firstWhere(
+    MediaObject? mediaObject = sdpObject.media.firstWhereOrNull(
       (MediaObject m) => m.type == RTCRtpMediaTypeExtension.value(kind),
-      orElse: () => null as MediaObject,
     );
 
-    if (mediaObject == null) {
-      throw ('m=${RTCRtpMediaTypeExtension.value(kind)} section not found');
-    }
-
-    if (mediaObject.ssrcs != null || mediaObject.ssrcs!.isNotEmpty) {
+    if (mediaObject?.ssrcs != null && mediaObject!.ssrcs!.isNotEmpty) {
       Ssrc ssrc = mediaObject.ssrcs!.first;
       RtpEncodingParameters result = RtpEncodingParameters(ssrc: ssrc.id);
 

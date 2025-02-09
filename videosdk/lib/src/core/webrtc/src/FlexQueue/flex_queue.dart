@@ -20,38 +20,24 @@ abstract class FlexTask {
 
 class FlexTaskAdd extends FlexTask {
   FlexTaskAdd({
-    String? id,
-    required Function execFun,
-    Object? argument,
-    Function? callbackFun,
-    Function? errorCallbackFun,
-    String? message,
-  }) : super(
-          id: id,
-          execFun: execFun,
-          argument: argument,
-          callbackFun: callbackFun,
-          errorCallbackFun: errorCallbackFun,
-          message: message,
-        );
+    super.id,
+    required super.execFun,
+    super.argument,
+    super.callbackFun,
+    super.errorCallbackFun,
+    super.message,
+  });
 }
 
 class FlexTaskRemove extends FlexTask {
   FlexTaskRemove({
-    String? id,
-    required Function execFun,
-    Object? argument,
-    Function? callbackFun,
-    Function? errorCallbackFun,
-    String? message,
-  }) : super(
-          id: id,
-          execFun: execFun,
-          argument: argument,
-          callbackFun: callbackFun,
-          errorCallbackFun: errorCallbackFun,
-          message: message,
-        );
+    super.id,
+    required super.execFun,
+    super.argument,
+    super.callbackFun,
+    super.errorCallbackFun,
+    super.message,
+  });
 }
 
 class FlexQueue {

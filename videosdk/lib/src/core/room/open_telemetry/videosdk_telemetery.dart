@@ -9,8 +9,8 @@ class VideoSDKTelemetery {
   late Span _rootSpan;
   late Tracer tracer;
   late otel_sdk.TracerProviderBase provider;
-  static var _roomId;
-  static var _peerId;
+  static dynamic _roomId;
+  static dynamic _peerId;
 
   VideoSDKTelemetery(
       {required roomId,

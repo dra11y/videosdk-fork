@@ -5,37 +5,39 @@ import 'package:videosdk/src/core/room/open_telemetry/videosdk_log.dart';
 
 import '../logger.dart';
 import '../message.dart';
-import 'TransportInterface.dart';
+import 'transport_interface.dart';
 
 final _logger = Logger('Logger::NativeTransport');
 
 class Transport extends TransportInterface {
   late bool _closed;
   late String _url;
+  // ignore: unused_field
   late dynamic _options;
   WebSocket? _ws;
 
   Transport(String url, {dynamic options}) : super(url, options: options) {
     _logger.debug('constructor() [url:$url, options:$options]');
-    this._closed = false;
-    this._url = url;
-    this._options = options ?? {};
-    this._ws = null;
+    _closed = false;
+    _url = url;
+    _options = options ?? {};
+    _ws = null;
 
-    this._runWebSocket();
+    _runWebSocket();
   }
 
+  @override
   get closed => _closed;
 
   @override
   close() {
     _logger.debug('close()');
 
-    this._closed = true;
-    this.safeEmit('close');
+    _closed = true;
+    safeEmit('close');
 
     try {
-      this._ws?.close();
+      _ws?.close();
     } catch (error) {
       //
       VideoSDKLog.createLog(
@@ -50,7 +52,7 @@ class Transport extends TransportInterface {
   @override
   Future send(message) async {
     try {
-      this._ws?.add(jsonEncode(message));
+      _ws?.add(jsonEncode(message));
     } catch (error) {
       //
       VideoSDKLog.createLog(
@@ -63,7 +65,7 @@ class Transport extends TransportInterface {
 
   _onOpen() {
     _logger.debug('onOpen');
-    this.safeEmit('open');
+    safeEmit('open');
   }
 
   // _onClose(event) {
@@ -84,9 +86,9 @@ class Transport extends TransportInterface {
   }
 
   _runWebSocket() async {
-    WebSocket.connect(this._url, protocols: ['protoo']).then((ws) {
+    WebSocket.connect(_url, protocols: ['protoo']).then((ws) {
       if (ws.readyState == WebSocket.open) {
-        this._ws = ws;
+        _ws = ws;
         _onOpen();
 
         ws.listen((event) {
@@ -94,14 +96,14 @@ class Transport extends TransportInterface {
 
           if (message == null) return;
 
-          this.safeEmit('message', message);
+          safeEmit('message', message);
         }, onError: _onError);
       } else {
         _logger.warn(
             'WebSocket "close" event code:${ws.closeCode}, reason:"${ws.closeReason}"]');
-        this._closed = true;
+        _closed = true;
 
-        this.safeEmit('close');
+        safeEmit('close');
       }
     });
     // this._ws.listen((e) {

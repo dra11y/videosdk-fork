@@ -2,7 +2,7 @@ import 'dart:developer';
 
 const String APP_NAME = 'videosdk-client';
 
-typedef void LoggerDebug(dynamic message);
+typedef LoggerDebug = void Function(dynamic message);
 
 class Logger {
   final String? _prefix;

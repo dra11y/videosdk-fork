@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:sdp_transform/sdp_transform.dart';
 
 import '../../handlers/sdp/media_section.dart';
@@ -119,25 +120,20 @@ class CommonUtils {
   }
 
   static DtlsParameters extractDtlsParameters(SdpObject sdpObject) {
-    MediaObject? mediaObject = sdpObject.media.firstWhere(
+    MediaObject? mediaObject = sdpObject.media.firstWhereOrNull(
       (m) =>
           m.iceUfrag != null &&
           m.iceUfrag!.isNotEmpty &&
           m.port != null &&
           m.port != 0,
-      orElse: () => null as MediaObject,
     );
 
-    if (mediaObject == null) {
-      throw ('no active media section found');
-    }
-
     Fingerprint fingerprint =
-        (mediaObject.fingerprint ?? sdpObject.fingerprint)!;
+        (mediaObject?.fingerprint ?? sdpObject.fingerprint)!;
 
     DtlsRole role = DtlsRole.auto;
 
-    switch (mediaObject.setup) {
+    switch (mediaObject?.setup) {
       case 'active':
         role = DtlsRole.client;
         break;
@@ -185,30 +181,17 @@ class CommonUtils {
         continue;
       }
 
-      Rtp? rtp = (answerMediaObject?.rtp ?? []).firstWhere(
-        (Rtp r) => r.payload == codec.payloadType,
-        orElse: () => null as Rtp,
-      );
-
-      if (rtp == null) {
-        continue;
-      }
+      // Rtp? rtp = (answerMediaObject?.rtp ?? []).firstWhereOrNull(
+      //   (Rtp r) => r.payload == codec.payloadType,
+      // );
 
       // Just in case.. ?
       answerMediaObject!.fmtp = answerMediaObject.fmtp ?? [];
 
-      Fmtp? fmtp = (answerMediaObject.fmtp ?? []).firstWhere(
+      Fmtp fmtp = (answerMediaObject.fmtp ?? []).firstWhere(
         (Fmtp f) => f.payload == codec.payloadType,
-        orElse: () => null as Fmtp,
+        orElse: () => throw 'cannot find payload of type ${codec.payloadType}',
       );
-
-      if (fmtp == null) {
-        fmtp = Fmtp(
-          payload: codec.payloadType,
-          config: '',
-        );
-        answerMediaObject.fmtp!.add(fmtp);
-      }
 
       Map<dynamic, dynamic> parameters = parseParams(fmtp.config);
 

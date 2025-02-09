@@ -32,7 +32,7 @@ class CharacterConfig {
       'characterId': _characterId,
       'interactionId': _interactionId,
       'displayName': _displayName,
-      'characterRole' : _characterRole,
+      'characterRole': _characterRole,
       'characterMode': _characterMode?.name.toLowerCase(),
       'metaData': _metaData,
     };

@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:videosdk_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
 
@@ -31,13 +32,14 @@ class PlanB extends HandlerInterface {
   // // Local stream for sending.
   // MediaStream _sendStream;
   // Map of sending MediaStreamTracks indexed by localId.
-  Map<String, MediaStreamTrack> _mapSendLocalIdTrack =
+  final Map<String, MediaStreamTrack> _mapSendLocalIdTrack =
       <String, MediaStreamTrack>{};
   // Next sending localId.
+  // ignore: unused_field
   int _nextSendLocalId = 0;
   // Map of MID, RTP parameters and RTCRtpReceiver indexed by local id.
   // Value is an Object with mid, rtpParameters and rtpReceiver.
-  Map<String, Map<String, dynamic>> _mapRecvLocalIdInfo =
+  final Map<String, Map<String, dynamic>> _mapRecvLocalIdInfo =
       <String, Map<String, dynamic>>{};
   // Whether  a DataChannel m=application section has been created.
   bool _hasDataChannelMediaSection = false;
@@ -64,10 +66,8 @@ class PlanB extends HandlerInterface {
     required DtlsRole localDtlsRole,
     SdpObject? localSdpObject,
   }) async {
-    if (localSdpObject == null) {
-      localSdpObject =
-          SdpObject.fromMap(parse((await _pc!.getLocalDescription())!.sdp!));
-    }
+    localSdpObject ??=
+        SdpObject.fromMap(parse((await _pc!.getLocalDescription())!.sdp!));
 
     // Get our local DTLS parameters.
     DtlsParameters dtlsParameters =
@@ -96,7 +96,10 @@ class PlanB extends HandlerInterface {
     if (_pc != null) {
       try {
         await _pc!.close();
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -133,7 +136,10 @@ class PlanB extends HandlerInterface {
       try {
         await pc.close();
         // pc?.dispose();
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       SdpObject sdpObject = SdpObject.fromMap(parse(offer.sdp!));
       RtpCapabilities nativeRtpCapabilities =
@@ -144,9 +150,12 @@ class PlanB extends HandlerInterface {
       try {
         await pc.close();
         // pc?.dispose();
-      } catch (error2) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
-      throw error;
+      rethrow;
     }
   }
 
@@ -215,9 +224,8 @@ class PlanB extends HandlerInterface {
     RTCSessionDescription answer = await _pc!.createAnswer();
 
     SdpObject localSdpObject = SdpObject.fromMap(parse(answer.sdp!));
-    MediaObject? answerMediaObject = localSdpObject.media.firstWhere(
+    MediaObject? answerMediaObject = localSdpObject.media.firstWhereOrNull(
       (MediaObject m) => m.mid == mid,
-      orElse: () => null as MediaObject,
     );
 
     // May need to modify codec parameters in the answer based on codec
@@ -243,7 +251,7 @@ class PlanB extends HandlerInterface {
             .toList() as List<MediaStream>)
         .firstWhere(
       (MediaStream s) => s.id == streamId,
-      orElse: () => null as MediaStream,
+      orElse: () => throw 'cannot find stream with id $streamId',
     );
     MediaStreamTrack? track = stream.getTrackById(localId);
 
@@ -325,7 +333,7 @@ class PlanB extends HandlerInterface {
     _logger.debug('restartIce()');
 
     if (!_transportReady) {
-      return null;
+      return;
     }
 
     if (_direction == Direction.send) {
@@ -483,7 +491,7 @@ class PlanB extends HandlerInterface {
       localSdpObject = SdpObject.fromMap(parse(offer.sdp!));
       offerMediaObject = localSdpObject.media.firstWhere(
         (MediaObject m) => m.type == 'video',
-        orElse: () => null as MediaObject,
+        orElse: () => throw 'cannot find track of type video',
       );
 
       PlanBUtils.addLegacySimulcast(
@@ -502,7 +510,7 @@ class PlanB extends HandlerInterface {
         SdpObject.fromMap(parse((await _pc!.getLocalDescription())!.sdp!));
     offerMediaObject = localSdpObject.media.firstWhere(
       (MediaObject m) => m.type == options.track.kind,
-      orElse: () => null as MediaObject,
+      orElse: () => throw 'cannot find track with type ${options.track.kind}',
     );
 
     // Set RTCP CNAME.
@@ -587,7 +595,7 @@ class PlanB extends HandlerInterface {
       SdpObject localSdpObject = SdpObject.fromMap(parse(offer.sdp!));
       MediaObject offerMediaObject = localSdpObject.media.firstWhere(
         (MediaObject m) => m.type == 'application',
-        orElse: () => null as MediaObject,
+        orElse: () => throw 'cannot find media with type application',
       );
 
       if (!_transportReady) {
@@ -714,7 +722,7 @@ class PlanB extends HandlerInterface {
         return;
       }
 
-      throw error;
+      rethrow;
     }
 
     if (_pc!.signalingState == RTCSignalingState.RTCSignalingStateStable) {
@@ -740,14 +748,5 @@ class PlanB extends HandlerInterface {
         iceServers.map((RTCIceServer ice) => ice.toMap()).toList();
 
     await _pc!.setConfiguration(configuration);
-  }
-}
-
-extension FirstWhereOrNullExtension<E> on Iterable<E> {
-  E? firstWhereOrNull(bool Function(E) test) {
-    for (E element in this) {
-      if (test(element)) return element;
-    }
-    return null;
   }
 }

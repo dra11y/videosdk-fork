@@ -11,14 +11,14 @@ class MeetingActionButton extends StatelessWidget {
   final double radius, iconSize;
 
   const MeetingActionButton({
-    Key? key,
+    super.key,
     required this.onPressed,
     required this.icon,
     this.backgroundColor = secondaryColor,
     this.iconColor = Colors.white,
     this.radius = 10,
     this.iconSize = 30,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

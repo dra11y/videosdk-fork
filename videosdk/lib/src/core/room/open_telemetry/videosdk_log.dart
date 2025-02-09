@@ -7,14 +7,16 @@ class VideoSDKLog {
   static String? meetingId;
   static String? sessionId;
   static String? peerId;
-  static var logsConfig;
+  static dynamic logsConfig;
   static String? jwtKey;
   static Map<String, dynamic>? deviceInfo;
   static bool? debugMode;
 
-
   static createLog(
-      {required String message, required String logLevel, Map? attributes, bool? dashboardLog }) {
+      {required String message,
+      required String logLevel,
+      Map? attributes,
+      bool? dashboardLog}) {
     try {
       if (meetingId == null ||
           peerId == null ||
@@ -33,18 +35,20 @@ class VideoSDKLog {
               "logType": logLevel,
               "attributes": {
                 "SDK": "flutter",
-                "SDK_VERSION" : sdkVersion,
+                "SDK_VERSION": sdkVersion,
                 "roomId": meetingId,
-                "peerId": peerId,  
-                "sessionId" : sessionId,
+                "peerId": peerId,
+                "sessionId": sessionId,
                 ...?deviceInfo,
                 ...?attributes,
               },
-              "dashboardLog" : dashboardLog,
-              "debugMode" : debugMode
+              "dashboardLog": dashboardLog,
+              "debugMode": debugMode
             }));
       }
     } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
     }
   }
 }

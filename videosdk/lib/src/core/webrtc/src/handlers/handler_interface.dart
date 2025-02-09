@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:videosdk_webrtc/flutter_webrtc.dart';
 import 'package:videosdk/src/core/webrtc/src/handlers/plan_b.dart';
@@ -11,6 +9,7 @@ import '../sctp_parameters.dart';
 import '../transport.dart';
 import 'unified_plan.dart';
 
+// ignore: camel_case_types
 class SCTP_NUM_STREAMS {
   static const int OS = 1024;
   static const int MIS = 1024;
@@ -68,7 +67,7 @@ extension RTCIceTransportPolicyToString on RTCIceTransportPolicy {
 
 class RTCIceServer {
   /// String or RTCOAuthCredential.
-  final credential;
+  final dynamic credential;
   final RTCIceCredentialType credentialType;
   final List<String> urls;
   final String username;
@@ -98,9 +97,9 @@ class HandlerRunOptions {
   SctpParameters? sctpParameters;
   List<RTCIceServer> iceServers;
   RTCIceTransportPolicy? iceTransportPolicy;
-  var additionalSettings;
+  dynamic additionalSettings;
   Map<String, dynamic> proprietaryConstraints;
-  var extendedRtpCapabilities;
+  dynamic extendedRtpCapabilities;
 
   HandlerRunOptions({
     required this.direction,

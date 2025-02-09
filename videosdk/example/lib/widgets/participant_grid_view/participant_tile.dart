@@ -1,10 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:videosdk/videosdk.dart';
 import 'package:videosdk_flutter_example/widgets/stats/call_stats.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../utils/toast.dart';
 
@@ -13,11 +10,11 @@ class ParticipantTile extends StatefulWidget {
   final ParticipantPinState pinState;
   final bool isLocalParticipant;
   const ParticipantTile({
-    Key? key,
+    super.key,
     required this.participant,
     required this.pinState,
     this.isLocalParticipant = false,
-  }) : super(key: key);
+  });
 
   @override
   State<ParticipantTile> createState() => _ParticipantTileState();
@@ -77,7 +74,7 @@ class _ParticipantTileState extends State<ParticipantTile> {
       child: Container(
         margin: const EdgeInsets.all(4.0),
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor.withOpacity(1),
+          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 1),
           border: Border.all(
             color: Colors.white38,
           ),
@@ -109,17 +106,16 @@ class _ParticipantTileState extends State<ParticipantTile> {
                     child: Container(
                       padding: const EdgeInsets.all(2.0),
                       decoration: BoxDecoration(
-                        color:
-                            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.2),
+                        color: Theme.of(context)
+                            .scaffoldBackgroundColor
+                            .withValues(alpha: 0.2),
                         border: Border.all(
                           color: Colors.white24,
                         ),
                         borderRadius: BorderRadius.circular(4.0),
                       ),
                       child: Text(
-                        widget.participant.displayName +
-                            " : " +
-                            widget.participant.mode.name,
+                        "${widget.participant.displayName} : ${widget.participant.mode.name}",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -133,6 +129,16 @@ class _ParticipantTileState extends State<ParticipantTile> {
                   top: 0,
                   left: 0,
                   child: InkWell(
+                    onTap: widget.isLocalParticipant
+                        ? null
+                        : () {
+                            if (audioStream != null) {
+                              widget.participant.muteMic();
+                            } else {
+                              toastMsg("Mic requested");
+                              widget.participant.unmuteMic();
+                            }
+                          },
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
@@ -146,22 +152,22 @@ class _ParticipantTileState extends State<ParticipantTile> {
                         size: 16,
                       ),
                     ),
-                    onTap: widget.isLocalParticipant
-                        ? null
-                        : () {
-                            if (audioStream != null) {
-                              widget.participant.muteMic();
-                            } else {
-                              toastMsg("Mic requested");
-                              widget.participant.unmuteMic();
-                            }
-                          },
                   ),
                 ),
                 Positioned(
                   top: 0,
                   right: 0,
                   child: InkWell(
+                    onTap: widget.isLocalParticipant
+                        ? null
+                        : () {
+                            if (videoStream != null) {
+                              widget.participant.disableCam();
+                            } else {
+                              toastMsg("Camera requested");
+                              widget.participant.enableCam();
+                            }
+                          },
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
@@ -180,16 +186,6 @@ class _ParticipantTileState extends State<ParticipantTile> {
                               size: 16,
                             ),
                     ),
-                    onTap: widget.isLocalParticipant
-                        ? null
-                        : () {
-                            if (videoStream != null) {
-                              widget.participant.disableCam();
-                            } else {
-                              toastMsg("Camera requested");
-                              widget.participant.enableCam();
-                            }
-                          },
                   ),
                 ),
                 if (!widget.isLocalParticipant)
@@ -319,52 +315,52 @@ class _ParticipantTileState extends State<ParticipantTile> {
   }
 
   _initStreamListeners() {
-    widget.participant.on(Events.streamEnabled, (Stream _stream) {
+    widget.participant.on(Events.streamEnabled, (Stream stream) {
       setState(() {
-        if (_stream.kind == 'video') {
-          videoStream = _stream;
+        if (stream.kind == 'video') {
+          videoStream = stream;
           widget.participant.setQuality(quality);
-        } else if (_stream.kind == 'audio') {
-          audioStream = _stream;
-        } else if (_stream.kind == 'share') {
-          shareStream = _stream;
+        } else if (stream.kind == 'audio') {
+          audioStream = stream;
+        } else if (stream.kind == 'share') {
+          shareStream = stream;
         }
       });
     });
 
-    widget.participant.on(Events.streamDisabled, (Stream _stream) {
+    widget.participant.on(Events.streamDisabled, (Stream stream) {
       setState(() {
-        if (_stream.kind == 'video' && videoStream?.id == _stream.id) {
+        if (stream.kind == 'video' && videoStream?.id == stream.id) {
           videoStream = null;
-        } else if (_stream.kind == 'audio' && audioStream?.id == _stream.id) {
+        } else if (stream.kind == 'audio' && audioStream?.id == stream.id) {
           audioStream = null;
-        } else if (_stream.kind == 'share' && shareStream?.id == _stream.id) {
+        } else if (stream.kind == 'share' && shareStream?.id == stream.id) {
           shareStream = null;
         }
       });
     });
 
-    widget.participant.on(Events.streamPaused, (Stream _stream) {
+    widget.participant.on(Events.streamPaused, (Stream stream) {
       setState(() {
-        if (_stream.kind == 'video' && videoStream?.id == _stream.id) {
-          videoStream = _stream;
-        } else if (_stream.kind == 'audio' && audioStream?.id == _stream.id) {
-          audioStream = _stream;
-        } else if (_stream.kind == 'share' && shareStream?.id == _stream.id) {
-          shareStream = _stream;
+        if (stream.kind == 'video' && videoStream?.id == stream.id) {
+          videoStream = stream;
+        } else if (stream.kind == 'audio' && audioStream?.id == stream.id) {
+          audioStream = stream;
+        } else if (stream.kind == 'share' && shareStream?.id == stream.id) {
+          shareStream = stream;
         }
       });
     });
 
-    widget.participant.on(Events.streamResumed, (Stream _stream) {
+    widget.participant.on(Events.streamResumed, (Stream stream) {
       setState(() {
-        if (_stream.kind == 'video' && videoStream?.id == _stream.id) {
-          videoStream = _stream;
+        if (stream.kind == 'video' && videoStream?.id == stream.id) {
+          videoStream = stream;
           widget.participant.setQuality(quality);
-        } else if (_stream.kind == 'audio' && audioStream?.id == _stream.id) {
-          audioStream = _stream;
-        } else if (_stream.kind == 'share' && shareStream?.id == _stream.id) {
-          shareStream = _stream;
+        } else if (stream.kind == 'audio' && audioStream?.id == stream.id) {
+          audioStream = stream;
+        } else if (stream.kind == 'share' && shareStream?.id == stream.id) {
+          shareStream = stream;
         }
       });
     });

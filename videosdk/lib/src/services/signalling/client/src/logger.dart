@@ -1,6 +1,7 @@
 class Logger {
-  String _app_name;
-  Logger(this._app_name) {}
+  // ignore: unused_field
+  final String _appName;
+  Logger(this._appName);
 
   void error(error) {
     // print('[' + _app_name + '] ERROR: ' + error);

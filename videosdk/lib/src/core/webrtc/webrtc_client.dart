@@ -1,4 +1,4 @@
-library videosdk_client;
+library;
 
 export './src/consumer.dart';
 export './src/data_consumer.dart';

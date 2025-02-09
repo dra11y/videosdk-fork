@@ -47,9 +47,9 @@ class RemoteSdp {
   // Whether this is Plan-B SDP.
   late bool _planB;
   // MediaSection instances with same order as in the SDP.
-  List<MediaSection> _mediaSections = <MediaSection>[];
+  final List<MediaSection> _mediaSections = <MediaSection>[];
   // MediaSection indices indexed by MID.
-  Map<String, int> _midToIndex = <String, int>{};
+  final Map<String, int> _midToIndex = <String, int>{};
   // First MID.
   String? _firstMid;
   // SDP object.
@@ -348,9 +348,7 @@ class RemoteSdp {
   }
 
   void _addMediaSection(MediaSection newMediaSection) {
-    if (_firstMid == null) {
-      _firstMid = newMediaSection.mid!;
-    }
+    _firstMid ??= newMediaSection.mid!;
 
     // Add to the vector.
     _mediaSections.add(newMediaSection);

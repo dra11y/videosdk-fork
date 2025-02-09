@@ -1,6 +1,6 @@
-import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
+import 'package:collection/collection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -10,7 +10,6 @@ import 'package:videosdk_webrtc/flutter_webrtc.dart';
 import 'package:random_string/random_string.dart';
 import 'package:videosdk/src/core/room/custom_track_configs.dart';
 import 'package:videosdk/src/core/room/events.dart';
-import 'package:videosdk/src/core/webrtc/src/handlers/unified_plan.dart';
 import 'package:videosdk/videosdk_platform_interface.dart';
 import 'package:events2/events2.dart';
 
@@ -160,7 +159,7 @@ class VideoSDK {
       platform = "web";
     }
 
-    final deviceInfo = LinkedHashMap<String, dynamic>();
+    final deviceInfo = <String, dynamic>{};
 
     deviceInfo.addAll(<String, dynamic>{
       "sdkType": 'flutter',
@@ -233,8 +232,8 @@ class VideoSDK {
 
   static Future<List<VideoDeviceInfo>?> getVideoDevices() async {
     MediaStream? mediaStream;
-    bool _isFirefox = await isFirefox();
-    if (_isFirefox) {
+    bool isFF = await isFirefox();
+    if (isFF) {
       try {
         mediaStream = await navigator.mediaDevices
             .getUserMedia({'audio': false, 'video': true});
@@ -246,7 +245,7 @@ class VideoSDK {
         }
       }
     }
-    if (!_isFirefox && kIsWeb) {
+    if (!isFF && kIsWeb) {
       // The deviceId,label of the VideoDevice will be empty if the camera permission is not granted on the web.
       // checkPermission is not supported by Firefox
       final permissions = await checkPermissions(Permissions.video);
@@ -282,8 +281,8 @@ class VideoSDK {
 
   static Future<List<AudioDeviceInfo>?> getAudioDevices() async {
     MediaStream? mediaStream;
-    bool _isFirefox = await isFirefox();
-    if (_isFirefox) {
+    bool isFF = await isFirefox();
+    if (isFF) {
       try {
         mediaStream = await navigator.mediaDevices
             .getUserMedia({'audio': true, 'video': false});
@@ -302,7 +301,7 @@ class VideoSDK {
         setAppleAudioConfiguration();
       }
     }
-    if (!_isFirefox && kIsWeb) {
+    if (!isFF && kIsWeb) {
       // The deviceId,label of the AudioDevice will be empty if the audio permission is not granted on the web.
       // checkPermission is not supported by Firefox
       final permissions = await checkPermissions(Permissions.audio);
@@ -369,11 +368,11 @@ class VideoSDK {
   }
 
   static Future<List<DeviceInfo>?> getDevices() async {
-    bool _isFirefox = await isFirefox();
+    bool isFF = await isFirefox();
 
     final List<DeviceInfo> mediaDevices = [];
 
-    if (!_isFirefox && kIsWeb) {
+    if (!isFF && kIsWeb) {
       var permissions = await checkPermissions();
 
       if (permissions['audio']! && !permissions['video']!) {
@@ -438,8 +437,8 @@ class VideoSDK {
       [Permissions? permissions]) async {
     permissions ??= Permissions.audio_video;
     Map<String, bool> permissionMap = {};
-    final _isFirefox = await isFirefox();
-    if (_isFirefox) {
+    final isFF = await isFirefox();
+    if (isFF) {
       throw UnsupportedError('Checking permission is not supported.');
     }
     if (!kIsWeb) {
@@ -481,8 +480,8 @@ class VideoSDK {
       [Permissions? permissions]) async {
     permissions ??= Permissions.audio_video;
     Map<String, bool> permissionMap = {};
-    bool _isFirefox = await isFirefox();
-    if (_isFirefox) {
+    bool isFF = await isFirefox();
+    if (isFF) {
       throw UnsupportedError('Requesting permission is not supported');
     }
     if (!kIsWeb) {
@@ -595,11 +594,11 @@ class VideoSDK {
     late Map<String, dynamic> mediaConstraints;
     String? selectedMicrophoneId;
 
-    bool _isFirefox = await isFirefox();
+    bool isFF = await isFirefox();
 
-    if (!_isFirefox && kIsWeb) {
-      Map<String, bool>? audioPermissions =
-          await VideoSDK.requestPermissions(Permissions.audio);
+    if (!isFF && kIsWeb) {
+      // Map<String, bool>? audioPermissions =
+      //     await VideoSDK.requestPermissions(Permissions.audio);
     } else {
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         Map<String, bool>? audioPermissions =
@@ -798,11 +797,11 @@ class VideoSDK {
     late Map<String, dynamic> mediaConstraints;
     String? selectedCameraId;
 
-    bool _isFirefox = await isFirefox();
+    bool isFF = await isFirefox();
 
-    if (!_isFirefox && kIsWeb) {
-      Map<String, bool>? videoPermissions =
-          await VideoSDK.requestPermissions(Permissions.video);
+    if (!isFF && kIsWeb) {
+      // Map<String, bool>? videoPermissions =
+      //     await VideoSDK.requestPermissions(Permissions.video);
     } else {
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         Map<String, bool>? videoPermissions =
@@ -923,7 +922,7 @@ class VideoSDK {
 
       if (!kIsWeb) {
         if (Platform.isWindows) {
-          var track = mediaStream.getVideoTracks().first;
+          // var track = mediaStream.getVideoTracks().first;
         }
       }
 

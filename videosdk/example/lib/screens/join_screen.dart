@@ -13,13 +13,13 @@ class JoinScreen extends StatefulWidget {
   final String token;
 
   const JoinScreen({
-    Key? key,
+    super.key,
     required this.meetingId,
     required this.token,
-  }) : super(key: key);
+  });
 
   @override
-  _JoinScreenState createState() => _JoinScreenState();
+  State<JoinScreen> createState() => _JoinScreenState();
 }
 
 class _JoinScreenState extends State<JoinScreen> {
@@ -188,6 +188,10 @@ class _JoinScreenState extends State<JoinScreen> {
                         // Dispose Camera Controller before leaving screen
                         await cameraController?.dispose();
 
+                        if (!context.mounted) {
+                          return;
+                        }
+
                         // Open meeting screen
                         Navigator.pushReplacement(
                           context,
@@ -202,15 +206,16 @@ class _JoinScreenState extends State<JoinScreen> {
                           ),
                         );
                       },
-                      child: const Text(
-                        "JOIN",
-                      ),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.white, backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).primaryColor,
                         textStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
+                      ),
+                      child: const Text(
+                        "JOIN",
                       ),
                     ),
                   ],

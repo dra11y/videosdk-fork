@@ -1,5 +1,4 @@
-import 'dart:developer';
-
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:videosdk/src/core/webrtc/src/utils.dart';
 import 'package:videosdk_webrtc/flutter_webrtc.dart';
@@ -33,7 +32,7 @@ class UnifiedPlan extends HandlerInterface {
   // RTCPeerConnection instance.
   RTCPeerConnection? _pc;
   // Map of RTCTransceivers indexed by MID.
-  Map<String, RTCRtpTransceiver> _mapMidTransceiver = {};
+  final Map<String, RTCRtpTransceiver> _mapMidTransceiver = {};
   // Whether a DataChannel m=application section has been created.
   bool _hasDataChannelMediaSection = false;
   // Sending DataChannel id value counter. Incremented for each new DataChannel.
@@ -47,10 +46,8 @@ class UnifiedPlan extends HandlerInterface {
     required DtlsRole localDtlsRole,
     SdpObject? localSdpObject,
   }) async {
-    if (localSdpObject == null) {
-      localSdpObject =
-          SdpObject.fromMap(parse((await _pc!.getLocalDescription())!.sdp!));
-    }
+    localSdpObject ??=
+        SdpObject.fromMap(parse((await _pc!.getLocalDescription())!.sdp!));
 
     // Get our local DTLS parameters.
     DtlsParameters dtlsParameters =
@@ -92,7 +89,10 @@ class UnifiedPlan extends HandlerInterface {
     if (_pc != null) {
       try {
         await _pc!.close();
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -118,7 +118,7 @@ class UnifiedPlan extends HandlerInterface {
 
       RTCSessionDescription offer = await pc.createOffer({});
       final parsedOffer = parse(offer.sdp!);
-      print('parsed: ' + parsedOffer.toString());
+      print('parsed: $parsedOffer');
       SdpObject sdpObject = SdpObject.fromMap(parsedOffer);
 
       RtpCapabilities nativeRtpCapabilities =
@@ -128,9 +128,12 @@ class UnifiedPlan extends HandlerInterface {
     } catch (error) {
       try {
         await pc.close();
-      } catch (error2) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
-      throw error;
+      rethrow;
     }
   }
 
@@ -214,7 +217,7 @@ class UnifiedPlan extends HandlerInterface {
 
     MediaObject answerMediaObject = localSdpObject.media.firstWhere(
       (MediaObject m) => m.mid == localId,
-      orElse: () => null as MediaObject,
+      orElse: () => throw 'cannot find media with m.mid == localId',
     );
 
     // May need to modify codec parameters in the answer based on codec
@@ -327,12 +330,8 @@ class UnifiedPlan extends HandlerInterface {
   Future<void> replaceTrack(ReplaceTrackOptions options) async {
     _assertSendRirection();
 
-    if (options.track != null) {
-      _logger.debug(
-          'replaceTrack() [localId:${options.localId}, track.id${options.track.id}');
-    } else {
-      _logger.debug('replaceTrack() [localId:${options.localId}, no track');
-    }
+    _logger.debug(
+        'replaceTrack() [localId:${options.localId}, track.id${options.track.id}');
 
     RTCRtpTransceiver? transceiver = _mapMidTransceiver[options.localId];
 
@@ -352,7 +351,7 @@ class UnifiedPlan extends HandlerInterface {
     _remoteSdp.updateIceParameters(iceParameters);
 
     if (!_transportReady) {
-      return null;
+      return;
     }
 
     if (_direction == Direction.send) {
@@ -424,7 +423,7 @@ class UnifiedPlan extends HandlerInterface {
       ),
     };
 
-    final _constrains = options.proprietaryConstraints.isEmpty
+    final constrains = options.proprietaryConstraints.isEmpty
         ? <String, dynamic>{
             'mandatory': {},
             'optional': [
@@ -433,8 +432,8 @@ class UnifiedPlan extends HandlerInterface {
           }
         : options.proprietaryConstraints;
 
-    _constrains['optional'] = [
-      ..._constrains['optional'],
+    constrains['optional'] = [
+      ...constrains['optional'],
       {'DtlsSrtpKeyAgreement': true}
     ];
 
@@ -448,7 +447,7 @@ class UnifiedPlan extends HandlerInterface {
         'sdpSemantics': 'unified-plan',
         ...options.additionalSettings,
       },
-      _constrains,
+      constrains,
     );
 
     // Handle RTCPeerConnection connection status.
@@ -496,9 +495,9 @@ class UnifiedPlan extends HandlerInterface {
 
     if (options.encodings.length > 1) {
       int idx = 0;
-      options.encodings.forEach((RtpEncodingParameters encoding) {
+      for (var encoding in options.encodings) {
         encoding.rid = 'r${idx++}';
-      });
+      }
 
       var nextRid = 1;
       var maxTemporalLayers = 1;
@@ -515,7 +514,7 @@ class UnifiedPlan extends HandlerInterface {
 
       for (var encoding in options.encodings) {
         encoding.rid = "r${nextRid++}";
-        encoding.scalabilityMode = "L1T${maxTemporalLayers}";
+        encoding.scalabilityMode = "L1T$maxTemporalLayers";
       }
     }
 
@@ -566,7 +565,7 @@ class UnifiedPlan extends HandlerInterface {
             ? options.encodings
             : [RtpEncodingParameters(scalabilityMode: '')];
 
-    ScalabilityMode layers = rtpEncodingParameters.length > 0
+    ScalabilityMode layers = rtpEncodingParameters.isNotEmpty
         ? ScalabilityMode.parse(rtpEncodingParameters.first.scalabilityMode)
         : const ScalabilityMode(spatialLayers: 1, temporalLayers: 1);
 
@@ -597,9 +596,9 @@ class UnifiedPlan extends HandlerInterface {
     if (!kIsWeb) {
       final transceivers = await _pc!.getTransceivers();
       transceiver = transceivers.firstWhere(
-        (_transceiver) =>
-            _transceiver.sender.track?.id == options.track.id &&
-            _transceiver.sender.track?.kind == options.track.kind,
+        (transceiver) =>
+            transceiver.sender.track?.id == options.track.id &&
+            transceiver.sender.track?.kind == options.track.kind,
         orElse: () => throw 'No transceiver found',
       );
     }
@@ -710,9 +709,9 @@ class UnifiedPlan extends HandlerInterface {
     if (!_hasDataChannelMediaSection) {
       RTCSessionDescription offer = await _pc!.createOffer({});
       SdpObject localSdpObject = SdpObject.fromMap(parse(offer.sdp!));
-      MediaObject? offerMediaObject = localSdpObject.media.firstWhere(
+      MediaObject offerMediaObject = localSdpObject.media.firstWhere(
         (MediaObject m) => m.type == 'application',
-        orElse: () => null as MediaObject,
+        orElse: () => throw 'cannot find media object with type application',
       );
 
       if (!_transportReady) {
@@ -769,14 +768,14 @@ class UnifiedPlan extends HandlerInterface {
     RTCRtpParameters parameters = transceiver.sender.parameters;
 
     int idx = 0;
-    parameters.encodings!.forEach((RTCRtpEncoding encoding) {
+    for (var encoding in parameters.encodings!) {
       if (idx <= options.spatialLayer) {
         encoding.active = true;
       } else {
         encoding.active = false;
       }
       idx++;
-    });
+    }
 
     await transceiver.sender.setParameters(parameters);
   }
@@ -798,11 +797,9 @@ class UnifiedPlan extends HandlerInterface {
     RTCRtpParameters parameters = transceiver.sender.parameters;
 
     int idx = 0;
-    parameters.encodings!.forEach((RTCRtpEncoding encoding) {
+    for (var encoding in parameters.encodings!) {
       parameters.encodings![idx] = RTCRtpEncoding(
-        active: options.params.active != null
-            ? options.params.active
-            : encoding.active,
+        active: options.params.active, // ?? encoding.active,
         maxBitrate: options.params.maxBitrate ?? encoding.maxBitrate,
         maxFramerate: options.params.maxFramerate ?? encoding.maxFramerate,
         minBitrate: options.params.minBitrate ?? encoding.minBitrate,
@@ -814,7 +811,7 @@ class UnifiedPlan extends HandlerInterface {
         ssrc: options.params.ssrc ?? encoding.ssrc,
       );
       idx++;
-    });
+    }
 
     await transceiver.sender.setParameters(parameters);
   }
@@ -893,14 +890,5 @@ class UnifiedPlan extends HandlerInterface {
         iceServers.map((RTCIceServer ice) => ice.toMap()).toList();
 
     await _pc!.setConfiguration(configuration);
-  }
-}
-
-extension FirstWhereOrNullExtension<E> on Iterable<E> {
-  E? firstWhereOrNull(bool Function(E) test) {
-    for (E element in this) {
-      if (test(element)) return element;
-    }
-    return null;
   }
 }

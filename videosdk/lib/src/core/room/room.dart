@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -8,7 +10,6 @@ import 'package:events2/events2.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:videosdk/src/core/room/user_message.dart';
 import 'package:videosdk_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
 import 'package:videosdk/src/core/room/audio_html/audio_html_interface.dart';
@@ -93,7 +94,7 @@ class Room {
 
   VideoSDKMetrics? _metricsCollector;
   var _stats = {};
-  var _latestStats = {};
+  final _latestStats = {};
 
   String _recordingState = "RECORDING_STOPPED";
   String _hlsState = "HLS_STOPPED";
@@ -423,14 +424,17 @@ class Room {
           "An error occurred in muteMic(): the method was called while the meeting was in the connecting state. Please try again after joining the meeting.");
       return;
     }
-    Span? _disableMicSpan;
+    Span? disableMicSpan;
 
     try {
-      _disableMicSpan = videoSDKTelemetery!.trace(
+      disableMicSpan = videoSDKTelemetery!.trace(
         spanName: 'disableMic() Calling',
         span: parentSpan,
       );
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     //
     if (_micProducer != null) {
@@ -441,13 +445,16 @@ class Room {
 
       Span? internalSpan;
       try {
-        if (_disableMicSpan != null) {
+        if (disableMicSpan != null) {
           internalSpan = videoSDKTelemetery!.trace(
             spanName: 'Closing Mic Producer',
-            span: _disableMicSpan,
+            span: disableMicSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       if (trackEnded) {
         _removeProducer(_micProducer!, _ProducerType.micProducer);
@@ -483,13 +490,13 @@ class Room {
           internalSpan = null;
         }
 
-        if (_disableMicSpan != null) {
+        if (disableMicSpan != null) {
           videoSDKTelemetery!.completeSpan(
-            span: _disableMicSpan,
+            span: disableMicSpan,
             message: 'Mic Disabled Successfully',
             status: StatusCode.ok,
           );
-          _disableMicSpan = null;
+          disableMicSpan = null;
         }
 
         _micState = false;
@@ -516,9 +523,9 @@ class Room {
           );
         }
 
-        if (_disableMicSpan != null) {
+        if (disableMicSpan != null) {
           videoSDKTelemetery!.completeSpan(
-            span: _disableMicSpan,
+            span: disableMicSpan,
             message: 'Mic Disabled Failed',
             status: StatusCode.error,
           );
@@ -529,14 +536,17 @@ class Room {
     } else {
       //
       try {
-        if (_disableMicSpan != null) {
+        if (disableMicSpan != null) {
           videoSDKTelemetery!.completeSpan(
-            span: _disableMicSpan,
+            span: disableMicSpan,
             message: 'Mic Producer Not found',
             status: StatusCode.error,
           );
         }
-      } catch (e) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       Map<String, String> attributes = {
         "error": "Error in muteMic() :: Microphone is already disabled."
@@ -583,7 +593,10 @@ class Room {
         ],
         span: parentSpan,
       );
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     if (_micInProgress) {
       try {
@@ -605,7 +618,10 @@ class Room {
             dashboardLog: true);
         print(
             "An error occurred in unmuteMic(): Attempted to call unmuteMic() while the microphone is already enabled");
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
       if (customTrack != null) {
         customTrack.dispose();
       }
@@ -652,7 +668,10 @@ class Room {
             span: enableMicSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       if (customTrack != null) {
         if (_customMicrophoneAudioTrack != null) {
@@ -682,16 +701,14 @@ class Room {
       encoderConfig =
           customAudioTrackConfigMap[customTrack.audioEncoderConfig]!;
 
-      if (encoderConfig != null) {
-        codecOptions = ProducerCodecOptions(
-          opusStereo: encoderConfig["stereo"] ? 1 : 0,
-          opusFec: encoderConfig["fec"] ? 1 : 0,
-          opusDtx: encoderConfig["dtx"] ? 1 : 0,
-          opusMaxPlaybackRate: encoderConfig["maxPlaybackRate"],
-          opusPtime: encoderConfig["packetTime"],
-          // opusMaxAverageBitrate: encoderConfig["bitRate"]
-        );
-      }
+      codecOptions = ProducerCodecOptions(
+        opusStereo: encoderConfig["stereo"] ? 1 : 0,
+        opusFec: encoderConfig["fec"] ? 1 : 0,
+        opusDtx: encoderConfig["dtx"] ? 1 : 0,
+        opusMaxPlaybackRate: encoderConfig["maxPlaybackRate"],
+        opusPtime: encoderConfig["packetTime"],
+        // opusMaxAverageBitrate: encoderConfig["bitRate"]
+      );
 
       if (_sendTransport != null) {
         _sendTransport!.produce(
@@ -722,7 +739,10 @@ class Room {
               message: 'Enable Mic UnSuccessful, _sendTransport is null.',
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _eventEmitter.emit("error", VideoSDKErrors[3012]);
 
@@ -737,9 +757,7 @@ class Room {
             dashboardLog: true);
         print(
             "An error occurred in unmuteMic(): VIDEOSDK ERROR :: ${VideoSDKErrors[3012]?['code']}  :: ${VideoSDKErrors[3012]?['name']} :: ${VideoSDKErrors[3012]?['message']}");
-        if (customTrack != null) {
-          customTrack.dispose();
-        }
+        customTrack.dispose();
         _micInProgress = false;
         return;
       }
@@ -770,7 +788,10 @@ class Room {
             switchAudioDevice(deviceToSwitch);
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       return;
     }
@@ -801,7 +822,10 @@ class Room {
             message: 'enableMic() | cannot produce audio',
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
       if (customTrack != null) {
         customTrack.dispose();
       }
@@ -818,7 +842,10 @@ class Room {
             span: enableMicSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       customTrack = await VideoSDK.createMicrophoneAudioTrack(
           microphoneId: _selectedAudioInput?.deviceId,
@@ -842,7 +869,10 @@ class Room {
                   'enableMic() | Cannot produce audio, some error occured while creating audio track.',
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _eventEmitter.emit("error", VideoSDKErrors[3012]);
         Map<String, String> attributes = {
@@ -869,7 +899,10 @@ class Room {
               span: internalSpan,
               status: StatusCode.ok);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
 
     _customMicrophoneAudioTrack = customTrack;
@@ -883,16 +916,19 @@ class Room {
     MediaStream? audioStream;
     MediaStreamTrack? track;
 
-    Span? _internalSpan;
+    Span? internalSpan0;
     //
     try {
       try {
         if (enableMicSpan != null) {
-          _internalSpan = videoSDKTelemetery!.trace(
+          internalSpan0 = videoSDKTelemetery!.trace(
               spanName: 'Generating Producer Configuration',
               span: enableMicSpan);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
       //
       audioStream = customTrack.mediaStream;
       //
@@ -902,13 +938,16 @@ class Room {
           customAudioTrackConfigMap[customTrack.audioEncoderConfig]!;
 
       try {
-        if (_internalSpan != null) {
+        if (internalSpan0 != null) {
           videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan0,
               message: 'Producer Configuration Generated',
               status: StatusCode.ok);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         if (enableMicSpan != null) {
@@ -920,16 +959,22 @@ class Room {
                 Attribute.fromString('encoderConfig', encoderConfig.toString())
               ]);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         if (enableMicSpan != null) {
-          _internalSpan = videoSDKTelemetery!.trace(
+          internalSpan0 = videoSDKTelemetery!.trace(
             spanName: 'Creating Mic Producer',
             span: enableMicSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       ProducerCodecOptions codecOptions = ProducerCodecOptions(
         opusStereo: encoderConfig["stereo"] ? 1 : 0,
@@ -955,9 +1000,9 @@ class Room {
         );
       } else {
         try {
-          if (_internalSpan != null) {
+          if (internalSpan0 != null) {
             videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan0,
               status: StatusCode.error,
               message: 'Send transport is null',
             );
@@ -971,7 +1016,10 @@ class Room {
                   'Mic could not be enabled, method was called when send transport was null.',
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _eventEmitter.emit("error", VideoSDKErrors[3012]);
 
@@ -986,25 +1034,24 @@ class Room {
             dashboardLog: true);
         print(
             "An error occurred in unmuteMic(): VIDEOSDK ERROR :: ${VideoSDKErrors[3012]?['code']}  :: ${VideoSDKErrors[3012]?['name']} :: ${VideoSDKErrors[3012]?['message']}");
-        if (customTrack != null) {
-          customTrack.dispose();
-        }
-        if (audioStream != null) {
-          await audioStream.dispose();
-        }
+        customTrack.dispose();
+        await audioStream.dispose();
         _micInProgress = false;
         return;
       }
 
       try {
-        if (_internalSpan != null) {
+        if (internalSpan0 != null) {
           videoSDKTelemetery!.completeSpan(
-            span: _internalSpan,
+            span: internalSpan0,
             status: StatusCode.ok,
             message: 'Mic Producer Created',
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         if (enableMicSpan != null) {
@@ -1024,7 +1071,10 @@ class Room {
             switchAudioDevice(deviceToSwitch);
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     } catch (error) {
       _micInProgress = false;
       //
@@ -1046,9 +1096,9 @@ class Room {
         await audioStream.dispose();
       }
 
-      if (_internalSpan != null) {
+      if (internalSpan0 != null) {
         videoSDKTelemetery!.completeSpan(
-          span: _internalSpan,
+          span: internalSpan0,
           status: StatusCode.error,
           message: 'Mic Producer Creation Failed',
         );
@@ -1090,7 +1140,10 @@ class Room {
           _selectedAudioInput = device;
         }
       }
-    } catch (e) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
   }
 
   Future<void> enableCam([CustomTrack? customAudioTrack]) =>
@@ -1126,7 +1179,10 @@ class Room {
           span: parentSpan,
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     //If camera is already enabled, return without enabling it again
     if (_cameraInProgress) {
@@ -1149,7 +1205,10 @@ class Room {
             dashboardLog: true);
         print(
             "An error occurred in enableCam(): Attempted to call enableCam() while the webcam is already enabled");
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
       if (customTrack != null) {
         customTrack.dispose();
       }
@@ -1181,7 +1240,10 @@ class Room {
             message: 'enableWebcam() | device cannot produce video',
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       if (customTrack != null) {
         customTrack.dispose();
@@ -1211,15 +1273,18 @@ class Room {
     }
 
     if (customTrack == null) {
-      Span? _internalSpan;
+      Span? internalSpan;
       try {
         if (enableWebcamSpan != null) {
-          _internalSpan = videoSDKTelemetery!.trace(
+          internalSpan = videoSDKTelemetery!.trace(
             spanName: 'Creating Track',
             span: enableWebcamSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       customTrack = await VideoSDK.createCameraVideoTrack(
           cameraId: _selectedVideoInput?.deviceId,
@@ -1229,9 +1294,9 @@ class Room {
       //If there is an error, createCameraVideoTrack will return null.
       if (customTrack == null) {
         try {
-          if (_internalSpan != null) {
+          if (internalSpan != null) {
             videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               status: StatusCode.error,
               message: 'enableWebcam() | Track could not be created',
             );
@@ -1244,7 +1309,10 @@ class Room {
                   'enableWebcam() | Cannot produce video, some error occured while creating video track.',
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _eventEmitter.emit("error", VideoSDKErrors[3011]);
         Map<String, String> attributes = {
@@ -1265,18 +1333,21 @@ class Room {
       }
 
       try {
-        if (_internalSpan != null) {
+        if (internalSpan != null) {
           videoSDKTelemetery!.completeSpan(
               message: 'WebCam Track Generated',
-              span: _internalSpan,
+              span: internalSpan,
               status: StatusCode.ok);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
 
     MediaStream? videoStream;
     MediaStreamTrack? track;
-    Span? _internalSpan;
+    Span? internalSpan;
 
     //Updating the list, in case permission status has changed.
     //(As in web, device labels and ids are not available w/o media permissions.)
@@ -1286,11 +1357,14 @@ class Room {
     try {
       try {
         if (enableWebcamSpan != null) {
-          _internalSpan = videoSDKTelemetery!.trace(
+          internalSpan = videoSDKTelemetery!.trace(
               spanName: 'Generating Producer Configuration',
               span: enableWebcamSpan);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       RtpCodecCapability? codec;
       // NOTE: prefer using h264
@@ -1309,9 +1383,9 @@ class Room {
               logLevel: "ERROR");
 
           try {
-            if (_internalSpan != null) {
+            if (internalSpan != null) {
               videoSDKTelemetery!.completeSpan(
-                span: _internalSpan,
+                span: internalSpan,
                 status: StatusCode.error,
                 message: 'Webcam Producer Creation Failed',
               );
@@ -1325,16 +1399,19 @@ class Room {
                     'Enable Webcam Failed \n desired vp9 codec+configuration is not supported',
               );
             }
-          } catch (e) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
           //
           throw UnsupportedError(
               "Device does not support vp9 codec+configuration");
         });
       } else {
         try {
-          if (_internalSpan != null) {
+          if (internalSpan != null) {
             videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               status: StatusCode.error,
               message: 'MediaSoup device not found',
             );
@@ -1347,7 +1424,10 @@ class Room {
               message: 'Enable Webcam Failed \n Mediasoup device not found',
             );
           }
-        } catch (e) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _eventEmitter.emit("error", VideoSDKErrors[3011]);
 
@@ -1362,9 +1442,7 @@ class Room {
             dashboardLog: true);
         print(
             "An error occurred in enableCam(): VIDEOSDK ERROR :: ${VideoSDKErrors[3011]?['code']}  :: ${VideoSDKErrors[3011]?['name']} :: ${VideoSDKErrors[3011]?['message']}");
-        if (customTrack != null) {
-          customTrack.dispose();
-        }
+        customTrack.dispose();
         _cameraInProgress = false;
         return;
       }
@@ -1399,18 +1477,21 @@ class Room {
       };
       appData['encodings'] = [];
 
-      encodings.forEach((encoding) {
+      for (var encoding in encodings) {
         appData['encodings'].add(encoding.toMap());
-      });
+      }
 
       try {
-        if (_internalSpan != null) {
+        if (internalSpan != null) {
           videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               message: 'Producer Configuration Generated',
               status: StatusCode.ok);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         if (enableWebcamSpan != null) {
@@ -1422,16 +1503,22 @@ class Room {
                 Attribute.fromString('appData', appData.toString())
               ]);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         if (enableWebcamSpan != null) {
-          _internalSpan = videoSDKTelemetery!.trace(
+          internalSpan = videoSDKTelemetery!.trace(
             spanName: 'Creating Webcam Producer',
             span: enableWebcamSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       if (_sendTransport != null) {
         _sendTransport!.produce(
@@ -1447,9 +1534,9 @@ class Room {
         );
       } else {
         try {
-          if (_internalSpan != null) {
+          if (internalSpan != null) {
             videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               status: StatusCode.error,
               message: 'Send transport is null',
             );
@@ -1463,7 +1550,10 @@ class Room {
                   'Webcam could not be enabled, method was called when send transport was null.',
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _eventEmitter.emit("error", VideoSDKErrors[3011]);
 
@@ -1478,25 +1568,24 @@ class Room {
             dashboardLog: true);
         print(
             "An error occurred in enableCam(): VIDEOSDK ERROR :: ${VideoSDKErrors[3011]?['code']}  :: ${VideoSDKErrors[3011]?['name']} :: ${VideoSDKErrors[3011]?['message']}");
-        if (customTrack != null) {
-          customTrack.dispose();
-        }
-        if (videoStream != null) {
-          await videoStream.dispose();
-        }
+        customTrack.dispose();
+        await videoStream.dispose();
         _cameraInProgress = false;
         return;
       }
 
       try {
-        if (_internalSpan != null) {
+        if (internalSpan != null) {
           videoSDKTelemetery!.completeSpan(
-            span: _internalSpan,
+            span: internalSpan,
             status: StatusCode.ok,
             message: 'Webcam Producer Created',
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         if (enableWebcamSpan != null) {
@@ -1510,7 +1599,10 @@ class Room {
         _camState = true;
         _cameraInProgress = true;
         _setSelectedCamId(customTrack: customTrack);
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     } catch (error) {
       //
       _cameraInProgress = false;
@@ -1531,9 +1623,9 @@ class Room {
       print(
           "An error occurred in enableCam(): VIDEOSDK ERROR :: ${VideoSDKErrors[3011]?['code']}  :: ${VideoSDKErrors[3011]?['name']} :: ${VideoSDKErrors[3011]?['message']}");
 
-      if (_internalSpan != null) {
+      if (internalSpan != null) {
         videoSDKTelemetery!.completeSpan(
-          span: _internalSpan,
+          span: internalSpan,
           status: StatusCode.error,
           message: 'Webcam Producer Creatation Failed',
         );
@@ -1568,7 +1660,10 @@ class Room {
           _selectedVideoInput = device;
         }
       }
-    } catch (e) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
   }
 
   Future<void> disableCam() => _disableCamImpl();
@@ -1590,7 +1685,10 @@ class Room {
           span: parentSpan,
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     //
     if (_cameraProducer != null) {
@@ -1611,7 +1709,10 @@ class Room {
             span: disableWebcamSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         //
@@ -1680,7 +1781,10 @@ class Room {
             status: StatusCode.error,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
       Map<String, String> attributes = {
         "error": "Error in disableCam() :: Webcam is already disabled."
       };
@@ -1755,7 +1859,10 @@ class Room {
           spanName: 'enableShare() Calling',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     if (_isMobilePlatform()) {
       if (Platform.isIOS && !iosPermissionGiven) {
@@ -1830,19 +1937,22 @@ class Room {
     MediaStreamTrack? videoTrack;
     MediaStreamTrack? audioTrack;
 
-    Span? _internalSpan;
+    Span? internalSpan;
     Span? trackSpan;
     Span? producerSpan;
     Span? audioProducerSpan;
     try {
       try {
         if (enableShareSpan != null) {
-          _internalSpan = videoSDKTelemetery!.trace(
+          internalSpan = videoSDKTelemetery!.trace(
             spanName: 'Generating Producer Configuration',
             span: enableShareSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
       //
       RtpCodecCapability? videoCodec;
 
@@ -1860,9 +1970,9 @@ class Room {
                   "Error in enableShare() \n desired vp9 codec+configuration is not supported",
               logLevel: "ERROR");
 
-          if (_internalSpan != null) {
+          if (internalSpan != null) {
             videoSDKTelemetery!.completeSpan(
-                span: _internalSpan,
+                span: internalSpan,
                 message: 'vp9 codec+configuration is not supported',
                 status: StatusCode.error);
           }
@@ -1878,9 +1988,9 @@ class Room {
         });
       } else {
         try {
-          if (_internalSpan != null) {
+          if (internalSpan != null) {
             videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               status: StatusCode.error,
               message: 'MediaSoup device not found',
             );
@@ -1894,7 +2004,10 @@ class Room {
                   'Enable Screenshare Failed \n Mediasoup device not found',
             );
           }
-        } catch (e) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _eventEmitter.emit("error", VideoSDKErrors[3013]);
 
@@ -1920,15 +2033,18 @@ class Room {
       }
 
       try {
-        if (_internalSpan != null) {
+        if (internalSpan != null) {
           videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               message: 'Producer Configuration Generated',
               status: StatusCode.ok);
 
-          _internalSpan = null;
+          internalSpan = null;
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       //
       shareStream = await _createShareStream(enableShareSpan);
@@ -1941,7 +2057,10 @@ class Room {
               span: enableShareSpan,
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         //
         videoTrack = shareStream.getVideoTracks().first;
@@ -1959,7 +2078,10 @@ class Room {
 
             trackSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         //
         _screenShareInProgress = true;
@@ -1971,7 +2093,10 @@ class Room {
               span: enableShareSpan,
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         //
         if (_sendTransport != null) {
           _sendTransport!.produce(
@@ -1995,7 +2120,10 @@ class Room {
 
               producerSpan = null;
             }
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           _eventEmitter.emit("error", VideoSDKErrors[3013]);
 
@@ -2010,9 +2138,7 @@ class Room {
               dashboardLog: true);
           print(
               "An error occurred in enableScreenShare(): VIDEOSDK ERROR :: ${VideoSDKErrors[3013]?['code']}  :: ${VideoSDKErrors[3013]?['name']} :: ${VideoSDKErrors[3013]?['message']}");
-          if (shareStream != null) {
-            await shareStream.dispose();
-          }
+          await shareStream.dispose();
           _screenShareInProgress = false;
           if (!kIsWeb) {
             if (Platform.isAndroid) {
@@ -2032,7 +2158,10 @@ class Room {
 
             producerSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         if (audioTrack != null) {
           try {
@@ -2042,7 +2171,10 @@ class Room {
                 span: enableShareSpan,
               );
             }
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           if (_sendTransport != null) {
             _sendTransport!.produce(
@@ -2065,7 +2197,10 @@ class Room {
 
                 audioProducerSpan = null;
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             _eventEmitter.emit("error", VideoSDKErrors[3013]);
 
@@ -2081,9 +2216,7 @@ class Room {
             print(
                 "An error occurred in enableScreenShare(): VIDEOSDK ERROR :: ${VideoSDKErrors[3013]?['code']}  :: ${VideoSDKErrors[3013]?['name']} :: ${VideoSDKErrors[3013]?['message']}");
 
-            if (shareStream != null) {
-              await shareStream.dispose();
-            }
+            await shareStream.dispose();
             if (!kIsWeb) {
               if (Platform.isAndroid) {
                 //
@@ -2225,7 +2358,10 @@ class Room {
           spanName: 'disableShare() Calling',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     //
     if (_screenshareProducer != null) {
@@ -2242,7 +2378,10 @@ class Room {
               span: disableShareSpan,
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         //
         String screenShareAudioId = _screenShareAudioProducer!.id;
@@ -2302,7 +2441,10 @@ class Room {
             span: disableShareSpan,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       //
       String screenShareId = _screenshareProducer!.id;
@@ -2710,7 +2852,10 @@ class Room {
                   ],
                 );
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             if (!_consume) {
               reject(403, 'I do not want to consume');
@@ -2730,7 +2875,10 @@ class Room {
                     span: newConsumerSpan,
                   );
                 }
-              } catch (error) {}
+              } catch (error) {
+                // FIXME: (TG) Handle the error?
+                print("error: $error");
+              }
 
               _recvTransport!.consume(
                 id: request['data']['id'],
@@ -2797,7 +2945,10 @@ class Room {
                     spanName: 'Protoo REQ: enableMic',
                   );
                 }
-              } catch (error) {}
+              } catch (error) {
+                // FIXME: (TG) Handle the error?
+                print("error: $error");
+              }
 
               _eventEmitter.emit('mic-requested', {
                 // 'participantId': peerId,
@@ -2809,7 +2960,10 @@ class Room {
                         span: enableMicSpan,
                       );
                     }
-                  } catch (error) {}
+                  } catch (error) {
+                    // FIXME: (TG) Handle the error?
+                    print("error: $error");
+                  }
                   _enableMicImpl(parentSpan: enableMicSpan);
                 },
                 "reject": () {
@@ -2820,7 +2974,10 @@ class Room {
                         span: enableMicSpan,
                       );
                     }
-                  } catch (error) {}
+                  } catch (error) {
+                    // FIXME: (TG) Handle the error?
+                    print("error: $error");
+                  }
                 },
               });
 
@@ -2860,7 +3017,10 @@ class Room {
                     spanName: 'Protoo REQ: disableMic',
                   );
                 }
-              } catch (error) {}
+              } catch (error) {
+                // FIXME: (TG) Handle the error?
+                print("error: $error");
+              }
 
               _disableMic(parentSpan: disableMicSpan);
               accept();
@@ -2898,7 +3058,10 @@ class Room {
                   spanName: 'Protoo REQ: enableWebcam',
                 );
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             try {
               _eventEmitter.emit('webcam-requested', {
@@ -2912,7 +3075,10 @@ class Room {
                         span: enableWebcam,
                       );
                     }
-                  } catch (error) {}
+                  } catch (error) {
+                    // FIXME: (TG) Handle the error?
+                    print("error: $error");
+                  }
                 },
                 "reject": () {
                   if (enableWebcam != null) {
@@ -2961,7 +3127,10 @@ class Room {
                     spanName: 'Protoo REQ: disableWebcam',
                   );
                 }
-              } catch (error) {}
+              } catch (error) {
+                // FIXME: (TG) Handle the error?
+                print("error: $error");
+              }
 
               _disableCamImpl(parentSpan: disableWebcamSpan);
               accept();
@@ -3032,7 +3201,10 @@ class Room {
                         Attribute.fromString('pinnedBy', pinnedBy),
                     ]);
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             // Update current State of participant pin
             if (!pinnedParticipants.containsKey(peerId)) {
@@ -3118,7 +3290,10 @@ class Room {
                     status: StatusCode.error,
                     message: 'Error from server');
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             break;
           }
@@ -3139,7 +3314,10 @@ class Room {
                   spanName: 'Protoo Noti: consumerClosed for $consumerId',
                 );
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             break;
           }
@@ -3197,7 +3375,10 @@ class Room {
                   span: _joinSpan,
                 );
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             if (id != localParticipant.id) {
               _eventEmitter.emit("entry-requested", <String, dynamic>{
@@ -3250,7 +3431,10 @@ class Room {
                   span: _joinSpan,
                 );
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             _eventEmitter.emit(
               "entry-responded",
@@ -3773,7 +3957,10 @@ class Room {
         "cpuUsage": cpuUsage,
         "memoryUsage": Platform.isIOS ? memoryUsage['used'] : memoryUsage
       };
-    } catch (err) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
     return null;
   }
 
@@ -3791,7 +3978,10 @@ class Room {
           routerSpan = videoSDKTelemetery!
               .trace(spanName: 'Loading Router Capabilities', span: _joinSpan);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       dynamic routerRtpCapabilities =
           await _webSocket!.socket.request('getRouterRtpCapabilities', {});
@@ -3911,7 +4101,10 @@ class Room {
               spanName: 'Emitted `MEETING_JOINED` Event',
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         _joined = true;
 
         FlutterForegroundTask.init(
@@ -3950,7 +4143,10 @@ class Room {
             status: StatusCode.ok,
           );
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     } catch (error) {
       //
       VideoSDKLog.createLog(
@@ -3985,7 +4181,10 @@ class Room {
             sendTransportSpan = videoSDKTelemetery!
                 .trace(spanName: 'Create Send Transport', span: parentSpan);
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         Map transportInfo =
             await _webSocket!.socket.request('createWebRtcTransport', {
@@ -4008,7 +4207,10 @@ class Room {
                   spanName:
                       'this._sendTransport `connect` Event : Transport is about to establish the ICE+DTLS connection');
             }
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           //
           _webSocket!.socket
@@ -4034,7 +4236,10 @@ class Room {
                   spanName:
                       'this._sendTransport `produce` Event : Transmit information about a new producer');
             }
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           try {
             Map response = await _webSocket!.socket.request(
@@ -4087,7 +4292,10 @@ class Room {
                   spanName:
                       '_sendTransport Event connectionStateChange $connectionState');
             }
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           //
           if (connectionState['connectionState'] == 'failed') {
@@ -4195,7 +4403,10 @@ class Room {
             receiveTransportSpan = videoSDKTelemetery!
                 .trace(spanName: 'Create Receive Transport', span: parentSpan);
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         Map transportInfo = await _webSocket!.socket.request(
           'createWebRtcTransport',
@@ -4222,7 +4433,10 @@ class Room {
                     spanName:
                         'this._recvTransport `connect` Event : Receive Transport is about to establish the ICE+DTLS connection');
               }
-            } catch (error) {}
+            } catch (error) {
+              // FIXME: (TG) Handle the error?
+              print("error: $error");
+            }
 
             _webSocket!.socket
                 .request(
@@ -4251,7 +4465,10 @@ class Room {
                   spanName:
                       '_recvTransport Event connectionStateChange $connectionState');
             }
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           if (connectionState['connectionState'] == 'failed') {
             _close("Network Error");
@@ -4409,7 +4626,10 @@ class Room {
           spanName: 'Meeting is in CLOSING State',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     if (_micProducer != null) {
       if (!_micProducer!.closed && _micProducer!.paused) {
@@ -4434,7 +4654,10 @@ class Room {
           spanName: 'Closing Trasnport',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     _sendTransport?.close();
     _recvTransport?.close();
@@ -4458,7 +4681,10 @@ class Room {
 
         videoSDKTelemetery!.flush();
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
   }
 
   bool isSendAndReceiveMode(Mode currentMode) {
@@ -4497,7 +4723,10 @@ class Room {
           Attribute.fromString('peer.requestedMode', requestedMode.toString())
         ]);
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (currentMode == requestedMode) {
@@ -4536,7 +4765,10 @@ class Room {
               span: changeModeSpan,
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         dynamic routerRtpCapabilities =
             await _webSocket!.socket.request('getRouterRtpCapabilities', {});
@@ -4559,7 +4791,10 @@ class Room {
                     'Loading Router Capabilities Failed \n Mediasoup device not found',
               );
             }
-          } catch (e) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           _eventEmitter.emit("error", VideoSDKErrors[3021]);
           Map<String, String> attributes = {
@@ -4584,7 +4819,10 @@ class Room {
                 status: StatusCode.ok);
             routerSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         if (_device!.canProduce(RTCRtpMediaType.RTCRtpMediaTypeAudio) == true ||
             _device!.canProduce(RTCRtpMediaType.RTCRtpMediaTypeVideo) == true) {
@@ -4604,7 +4842,10 @@ class Room {
               span: changeModeSpan,
             );
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _webSocket?.socket
             .request("changeMode", {"mode": requestedMode.parseToString()});
@@ -4617,7 +4858,10 @@ class Room {
                 status: StatusCode.ok);
             requestSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         if (_produce) {
           if (_micEnabled) {
@@ -4657,7 +4901,10 @@ class Room {
                     "Emitting 'PEER_MODE_CHANGED' for Peer : ${localParticipant.id}");
             requestSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
       } else if (requestedMode == Mode.SIGNALLING_ONLY ||
           requestedMode == Mode.VIEWER) {
         try {
@@ -4666,7 +4913,10 @@ class Room {
                 spanName: 'Sending changeMode request to server',
                 span: changeModeSpan);
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         _consume = false;
         _produce = false;
 
@@ -4687,7 +4937,10 @@ class Room {
                 status: StatusCode.ok);
             requestSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
       } else if (isViewerMode(currentMode) && requestedMode == Mode.RECV_ONLY) {
         try {
           if (changeModeSpan != null) {
@@ -4695,7 +4948,10 @@ class Room {
                 spanName: 'Sending changeMode request to server',
                 span: changeModeSpan);
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         _consume = true;
         _createReceiveTransport();
 
@@ -4710,7 +4966,10 @@ class Room {
                 status: StatusCode.ok);
             requestSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
       } else if (isSendAndReceiveMode(currentMode) &&
           requestedMode == Mode.RECV_ONLY) {
         try {
@@ -4719,7 +4978,10 @@ class Room {
                 spanName: 'Sending changeMode request to server',
                 span: changeModeSpan);
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
 
         _produce = false;
 
@@ -4736,7 +4998,10 @@ class Room {
                 status: StatusCode.ok);
             requestSpan = null;
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
       }
 
       if (changeModeSpan != null) {
@@ -4800,7 +5065,10 @@ class Room {
           span: _joinSpan,
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -4815,7 +5083,10 @@ class Room {
                 status: StatusCode.error,
                 message: 'Entry Requested Failed, websocket was null');
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         return;
       }
 
@@ -4826,7 +5097,10 @@ class Room {
               status: StatusCode.ok,
               message: 'Entry Requested Successfully');
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     } catch (error) {
       VideoSDKLog.createLog(
           message: "Error in _requestEntry() \n ${error.toString()}",
@@ -4839,7 +5113,10 @@ class Room {
               status: StatusCode.error,
               message: 'Entry Requested Failed, \n ${error.toString()}');
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -4856,7 +5133,10 @@ class Room {
           span: span,
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -4870,7 +5150,10 @@ class Room {
                 status: StatusCode.error,
                 message: 'Entry Responded Failed, websocket was null');
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         return;
       }
 
@@ -4881,7 +5164,10 @@ class Room {
               status: StatusCode.ok,
               message: 'Entry Responded Successfully');
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     } catch (error) {
       VideoSDKLog.createLog(
           message: "Error in _respondEntry() \n ${error.toString()}",
@@ -4894,7 +5180,10 @@ class Room {
               status: StatusCode.error,
               message: 'Entry Responded Failed, \n ${error.toString()}');
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -4932,7 +5221,10 @@ class Room {
           ],
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -4975,7 +5267,10 @@ class Room {
           spanName: 'stopRecording() Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5039,7 +5334,10 @@ class Room {
           ],
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5083,7 +5381,10 @@ class Room {
           spanName: 'stopLivestream() Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5144,7 +5445,10 @@ class Room {
           ],
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5188,7 +5492,10 @@ class Room {
           spanName: 'stopHls() Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5229,7 +5536,6 @@ class Room {
     if (transcriptionConfig != null) {
       data["config"] = transcriptionConfig;
     }
-    ;
 
     Span? startTranscriptionSpan;
     try {
@@ -5245,7 +5551,10 @@ class Room {
           ],
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5290,7 +5599,10 @@ class Room {
           spanName: 'stopTranscription() Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5345,7 +5657,10 @@ class Room {
           Attribute.fromString('deviceId', device.deviceId),
         ]);
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       //
@@ -5493,7 +5808,10 @@ class Room {
         switchAudioDeviceSpan =
             videoSDKTelemetery!.trace(spanName: 'Switching AudioDevice');
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (!kIsWeb) {
@@ -5569,7 +5887,10 @@ class Room {
             Attribute.fromString("deviceLabel", device.label)
           ]);
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       try {
         if (customTrack != null) {
@@ -5606,7 +5927,10 @@ class Room {
                   message:
                       'Change Mic Unsuccessful, custom track couldnt be created.');
             }
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           _eventEmitter.emit("error", VideoSDKErrors[3012]);
           Map<String, String> attributes = {
@@ -5695,7 +6019,10 @@ class Room {
           spanName: 'Enable Peer Mic for $peerId Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5751,7 +6078,10 @@ class Room {
           spanName: 'Disable Peer Mic for $peerId Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5770,7 +6100,10 @@ class Room {
                 message:
                     'Disable Peer Mic for $peerId Failed, websocket was null');
           }
-        } catch (e) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         return;
       }
 
@@ -5797,7 +6130,10 @@ class Room {
               message:
                   'Disable Peer Mic for $peerId Failed \n ${error.toString()}');
         }
-      } catch (e) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -5810,7 +6146,10 @@ class Room {
           spanName: 'Enable Peer Camera for $peerId Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5829,7 +6168,10 @@ class Room {
                 message:
                     'Enable Peer Camera for $peerId Failed, websocket was null');
           }
-        } catch (e) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         return;
       }
 
@@ -5855,7 +6197,10 @@ class Room {
               message:
                   'Enable Peer Camera for $peerId Failed \n ${error.toString()}');
         }
-      } catch (e) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -5868,7 +6213,10 @@ class Room {
           spanName: 'Disable Peer Camera for $peerId Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5887,7 +6235,10 @@ class Room {
                 message:
                     'Disable Peer Camera for $peerId Failed \n websocket was null');
           }
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         return;
       }
 
@@ -5913,7 +6264,10 @@ class Room {
               message:
                   'Disable Peer Camera for $peerId Failed \n ${error.toString()}');
         }
-      } catch (error) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -5926,7 +6280,10 @@ class Room {
           spanName: 'Remove $peerId Peer Start',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -5944,7 +6301,10 @@ class Room {
                 status: StatusCode.error,
                 message: 'Remove $peerId Peer Failed \n websocket was null');
           }
-        } catch (e) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         return;
       }
 
@@ -5970,7 +6330,10 @@ class Room {
               status: StatusCode.error,
               message: 'Remove $peerId Peer Failed \n ${error.toString()}');
         }
-      } catch (e) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
     }
   }
 
@@ -6177,19 +6540,19 @@ class Room {
       final removedPeer = _peers.remove(peerId);
 
       if (removedPeer?.audio != null) {
-        _eventEmitter.emit("stream-disabled-${peerId}",
+        _eventEmitter.emit("stream-disabled-$peerId",
             {"audioConsumerId": removedPeer?.audio?.id});
       }
 
       if (removedPeer?.video != null) {
-        _eventEmitter.emit("stream-disabled-${peerId}", {
+        _eventEmitter.emit("stream-disabled-$peerId", {
           "videoConsumerId": removedPeer?.video?.id,
           "renderer": removedPeer?.renderer
         });
       }
 
       if (removedPeer?.share != null) {
-        _eventEmitter.emit("stream-disabled-${peerId}", {
+        _eventEmitter.emit("stream-disabled-$peerId", {
           "shareConsumerId": removedPeer?.share?.id,
           "shareRenderer": removedPeer?.shareRenderer
         });
@@ -6620,7 +6983,10 @@ class Room {
                   'prevQuality': prevQuality,
                   'currentQuality': currentQuality
                 });
-          } catch (error) {}
+          } catch (error) {
+            // FIXME: (TG) Handle the error?
+            print("error: $error");
+          }
 
           //
           _eventEmitter.emit("quality-changed-${peer.id}", {
@@ -6647,7 +7013,7 @@ class Room {
 
         if (consumer != null) {
           List<dynamic> stats = _latestStats[id] ?? [];
-          if (consumer.track.kind == "video" && stats.length > 0) {
+          if (consumer.track.kind == "video" && stats.isNotEmpty) {
             stats[0]['spatialLayer'] = consumer.spatialLayer;
             stats[0]['temporalLayer'] = consumer.temporalLayer;
           }
@@ -6731,64 +7097,67 @@ class Room {
     _addPeerConsumer(consumer.peerId, consumer);
   }
 
-  //Not using anymore.
-  Future<MediaStream> _createAudioStream() async {
-    //
-    Map<String, dynamic> mediaConstraints = {
-      'audio': {
-        'optional': [
-          {
-            'sourceId': _selectedAudioInput?.deviceId,
-          },
-        ],
-      },
-    };
+  // //Not using anymore.
+  // Future<MediaStream> _createAudioStream() async {
+  //   //
+  //   Map<String, dynamic> mediaConstraints = {
+  //     'audio': {
+  //       'optional': [
+  //         {
+  //           'sourceId': _selectedAudioInput?.deviceId,
+  //         },
+  //       ],
+  //     },
+  //   };
 
-    //
-    MediaStream stream =
-        await navigator.mediaDevices.getUserMedia(mediaConstraints);
+  //   //
+  //   MediaStream stream =
+  //       await navigator.mediaDevices.getUserMedia(mediaConstraints);
 
-    //
-    return stream;
-  }
+  //   //
+  //   return stream;
+  // }
 
-  //Not using anymore.
-  Future<MediaStream> _createVideoStream() async {
-    //
-    Map<String, dynamic> mediaConstraints = <String, dynamic>{
-      'audio': false,
-      'video': {
-        'mandatory': {
-          'minWidth':
-              '1280', // Provide your own width, height and frame rate here
-          'minHeight': '720',
-          'minFrameRate': '30',
-        },
-        'optional': [
-          {
-            'sourceId': _selectedVideoInput?.deviceId,
-          },
-        ],
-      },
-    };
-    //
-    MediaStream stream =
-        await navigator.mediaDevices.getUserMedia(mediaConstraints);
+  // //Not using anymore.
+  // Future<MediaStream> _createVideoStream() async {
+  //   //
+  //   Map<String, dynamic> mediaConstraints = <String, dynamic>{
+  //     'audio': false,
+  //     'video': {
+  //       'mandatory': {
+  //         'minWidth':
+  //             '1280', // Provide your own width, height and frame rate here
+  //         'minHeight': '720',
+  //         'minFrameRate': '30',
+  //       },
+  //       'optional': [
+  //         {
+  //           'sourceId': _selectedVideoInput?.deviceId,
+  //         },
+  //       ],
+  //     },
+  //   };
+  //   //
+  //   MediaStream stream =
+  //       await navigator.mediaDevices.getUserMedia(mediaConstraints);
 
-    //
-    return stream;
-  }
+  //   //
+  //   return stream;
+  // }
 
   Future<MediaStream?> _createShareStream(Span? span) async {
-    Span? _internalSpan;
+    Span? internalSpan;
     try {
       if (span != null) {
         try {
-          _internalSpan = videoSDKTelemetery!.trace(
+          internalSpan = videoSDKTelemetery!.trace(
             spanName: 'Creating Stream',
             span: span,
           );
-        } catch (error) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
       }
       //
       var mediaConstraints = <String, dynamic>{
@@ -6829,26 +7198,32 @@ class Room {
             "An error occurred in enableScreenShare(): VIDEOSDK ERROR :: ${VideoSDKErrors[3015]?['code']}  :: ${VideoSDKErrors[3015]?['name']} :: ${VideoSDKErrors[3015]?['message']}");
 
         try {
-          if (_internalSpan != null) {
+          if (internalSpan != null) {
             videoSDKTelemetery!.completeSpan(
-                span: _internalSpan,
+                span: internalSpan,
                 message: 'Stream Creation Failed due to platform not support',
                 status: StatusCode.error);
           }
-        } catch (e) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
         return null;
       } else {
         stream = await navigator.mediaDevices.getDisplayMedia(mediaConstraints);
         stream.getVideoTracks().first.onEnded = () => disableScreenShare();
       }
       try {
-        if (_internalSpan != null) {
+        if (internalSpan != null) {
           videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               message: 'Stream Creation Completed',
               status: StatusCode.ok);
         }
-      } catch (e) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
 
       //
       return stream;
@@ -6858,13 +7233,16 @@ class Room {
           logLevel: "ERROR");
 
       try {
-        if (_internalSpan != null) {
+        if (internalSpan != null) {
           videoSDKTelemetery!.completeSpan(
-              span: _internalSpan,
+              span: internalSpan,
               message: 'Stream Creation Failed due to error : ${e.toString()}',
               status: StatusCode.error);
         }
-      } catch (e) {}
+      } catch (error) {
+        // FIXME: (TG) Handle the error?
+        print("error: $error");
+      }
       return null;
     }
   }
@@ -7080,7 +7458,10 @@ class Room {
           ],
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -7128,7 +7509,10 @@ class Room {
           spanName: 'removeCharacter() Started',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -7214,7 +7598,10 @@ class Room {
           spanName: 'startWhiteboard() called',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {
@@ -7259,7 +7646,10 @@ class Room {
           spanName: 'stopWhiteboard() Called',
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
 
     try {
       if (_webSocket != null) {

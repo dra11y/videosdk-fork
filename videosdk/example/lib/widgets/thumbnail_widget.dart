@@ -6,17 +6,16 @@ import 'package:videosdk_webrtc/flutter_webrtc.dart';
 
 class ThumbnailWidget extends StatefulWidget {
   const ThumbnailWidget(
-      {Key? key,
+      {super.key,
       required this.source,
       required this.selected,
-      required this.onTap})
-      : super(key: key);
+      required this.onTap});
   final DesktopCapturerSource source;
   final bool selected;
   final Function(DesktopCapturerSource) onTap;
 
   @override
-  _ThumbnailWidgetState createState() => _ThumbnailWidgetState();
+  State<ThumbnailWidget> createState() => _ThumbnailWidgetState();
 }
 
 class _ThumbnailWidgetState extends State<ThumbnailWidget> {
@@ -59,13 +58,12 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
               widget.onTap(widget.source);
             },
             child: _thumbnail == null || _thumbnail!.isEmpty
-              ? Container() :
-                Image.memory(
+                ? Container()
+                : Image.memory(
                     _thumbnail!,
                     gaplessPlayback: true,
                     alignment: Alignment.center,
-                  )
-                ,
+                  ),
           ),
         )),
         Text(

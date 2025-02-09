@@ -21,7 +21,7 @@ class ConsumerOptions {
   });
 }
 
-typedef void ConsumerOnTrackEnded();
+typedef ConsumerOnTrackEnded = void Function();
 
 class Consumer extends EnhancedEventEmitter {
   /// Id.
@@ -247,7 +247,10 @@ class Consumer extends EnhancedEventEmitter {
     try {
       track.onEnded = null;
       await track.stop();
-    } catch (error) {}
+    } catch (error) {
+      // FIXME: (TG) Handle the error?
+      print("error: $error");
+    }
   }
 
   @override

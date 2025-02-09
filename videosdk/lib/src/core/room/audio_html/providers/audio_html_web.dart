@@ -12,7 +12,7 @@ class AudioHTMLWeb implements AudioHTMLInterface {
 
   @override
   Future<dynamic> startAudio(Consumer? audioConsumer) async {
-    if (audioConsumer == null || audioConsumer!.track == null) {
+    if (audioConsumer == null) {
       return;
     }
 
@@ -32,21 +32,18 @@ class AudioHTMLWeb implements AudioHTMLInterface {
       _audioElements[track.id!] = audioElement;
     }
 
-    if (audioElement is! web.HTMLAudioElement) {
+    if (!audioElement.isA<web.HTMLAudioElement>()) {
       return;
     }
-    var _srcObject = audioConsumer.stream as MediaStreamWeb;
-    if (null != _srcObject) {
-      if (audioConsumer.stream.getAudioTracks().isNotEmpty) {
-        final audioStream = web.MediaStream();
-        for (final track in _srcObject!.jsStream.getAudioTracks().toDart) {
-          audioStream.addTrack(track);
-        }
-        audioElement.srcObject = audioStream;
-        return audioElement.play();
+    audioElement = audioElement as web.HTMLAudioElement;
+    var srcObject = audioConsumer.stream as MediaStreamWeb;
+    if (audioConsumer.stream.getAudioTracks().isNotEmpty) {
+      final audioStream = web.MediaStream();
+      for (final track in srcObject.jsStream.getAudioTracks().toDart) {
+        audioStream.addTrack(track);
       }
-    } else {
-      print("srcObject null");
+      audioElement.srcObject = audioStream;
+      return audioElement.play();
     }
   }
 
@@ -67,8 +64,8 @@ class AudioHTMLWeb implements AudioHTMLInterface {
   void stopAudio(String id) {
     final audioElement = web.document.getElementById("audio_$id");
     if (audioElement != null) {
-      if (audioElement is web.HTMLAudioElement) {
-        audioElement.srcObject = null;
+      if (audioElement.isA<web.HTMLAudioElement>()) {
+        (audioElement as web.HTMLAudioElement).srcObject = null;
       }
       _audioElements.remove(id);
       audioElement.remove();
@@ -81,10 +78,8 @@ class AudioHTMLWeb implements AudioHTMLInterface {
         web.document.getElementsByTagName('audio');
 
     for (var i = 0; i < audioElements.length; i++) {
-      if ((audioElements.item(i)!).hasProperty("setSinkId" as JSAny) as bool) {
-        audioElements
-            .item(i)!
-            .callMethod("setSinkId" as JSAny, [deviceId] as JSAny?);
+      if ((audioElements.item(i)!).hasProperty("setSinkId".toJS).toDart) {
+        audioElements.item(i)!.callMethod("setSinkId".toJS, [deviceId].jsify());
       }
     }
   }

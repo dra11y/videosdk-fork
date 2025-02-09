@@ -11,8 +11,8 @@ class Message {
   static JsonEncoder encoder = JsonEncoder();
   static JsonDecoder decoder = JsonDecoder();
   static Map<String, dynamic>? parse(dynamic raw) {
-    var object;
-    final message = Map<String, dynamic>();
+    dynamic object;
+    final message = <String, dynamic>{};
 
     try {
       object = decoder.convert(raw);
@@ -24,7 +24,7 @@ class Message {
           logLevel: "ERROR");
 
       //
-      logger.error('parse() | invalid JSON: %s' + error.toString());
+      logger.error('parse() | invalid JSON: %s$error');
 
       return null;
     }
@@ -33,11 +33,11 @@ class Message {
     if (object['request'] != null) {
       message['request'] = true;
 
-      if (!(object['method'] is String)) {
+      if (object['method'] is! String) {
         logger.failure('parse() | missing/invalid method field');
       }
 
-      if (!(object['id'] is num)) {
+      if (object['id'] is! num) {
         logger.failure('parse() | missing/invalid id field');
       }
 
@@ -48,7 +48,7 @@ class Message {
     // Response.
     else if (object['response'] != null) {
       message['response'] = true;
-      if (!(object['id'] is num)) {
+      if (object['id'] is! num) {
         logger.failure('parse() | missing/invalid id field');
       }
 
@@ -68,7 +68,7 @@ class Message {
     // Notification.
     else if (object['notification'] != null) {
       message['notification'] = true;
-      if (!(object['method'] is String)) {
+      if (object['method'] is! String) {
         logger.failure('parse() | missing/invalid method field');
       }
 

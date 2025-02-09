@@ -12,18 +12,18 @@ dependencies:
     sdk: flutter
   videosdk:
     path: ../
-  http: ^1.2.2
+  http: ^1.3.0
   flutter_dotenv: ^5.2.1
   cupertino_icons: ^1.0.8
-  fluttertoast: 8.2.8
-  camera: ^0.11.0
-  flutter_svg:  ^2.0.10
-  visibility_detector: ^0.4.0
+  fluttertoast: 8.2.11
+  camera: ^0.11.1
+  flutter_svg: ^2.0.17
+  visibility_detector: ^0.4.0+2
   date_time_format: ^2.0.1
-  touch_ripple_effect: ^2.5.1
+  touch_ripple_effect: ^2.5.2
   webview_flutter: ^4.10.0
   videosdk_media_effects: 0.0.2
-
+  videosdk_webrtc: any
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -35,4 +35,4 @@ flutter:
 
   assets:
     - assets/
-    - prod.env
+    # - prod.env

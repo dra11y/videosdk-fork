@@ -22,12 +22,12 @@ class EnhancedEventEmitter extends EventEmitter {
       [Map<String, dynamic>? args]) async {
     try {
       final Completer<dynamic> completer = Completer<dynamic>();
-      Map<String, dynamic> _args = {
+      Map<String, dynamic> args0 = {
         'callback': completer.complete,
         'errback': completer.completeError,
         ...?args,
       };
-      emitAsFuture(event, _args);
+      emitAsFuture(event, args0);
       return completer.future;
     } catch (error) {
       _logger.error(

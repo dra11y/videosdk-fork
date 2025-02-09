@@ -1,4 +1,4 @@
-library videosdk;
+library;
 
 export 'package:videosdk_webrtc/flutter_webrtc.dart'
     show RTCVideoViewObjectFit, RTCVideoRenderer, RTCVideoView, MediaDeviceInfo;

@@ -37,14 +37,10 @@ class RtpCapabilities {
     List<String>? fecMechanisms,
   }) {
     return RtpCapabilities(
-      codecs:
-          codecs != null ? codecs : List<RtpCodecCapability>.from(old.codecs),
-      headerExtensions: headerExtensions != null
-          ? headerExtensions
-          : List<RtpHeaderExtension>.from(old.headerExtensions),
-      fecMechanisms: fecMechanisms != null
-          ? fecMechanisms
-          : List<String>.from(old.fecMechanisms),
+      codecs: codecs ?? List<RtpCodecCapability>.from(old.codecs),
+      headerExtensions: headerExtensions ??
+          List<RtpHeaderExtension>.from(old.headerExtensions),
+      fecMechanisms: fecMechanisms ?? List<String>.from(old.fecMechanisms),
     );
   }
 
@@ -122,8 +118,8 @@ class RtcpFeedback {
 
   Map<String, String> toMap() {
     return {
-      'type': this.type,
-      'parameter': this.parameter,
+      'type': type,
+      'parameter': parameter,
     };
   }
 }
@@ -397,7 +393,8 @@ class RtpEncodingParameters extends RTCRtpEncoding {
 	 * Number of spatial and temporal layers in the RTP stream (e.g. 'L1T3').
 	 * See webrtc-svc.
 	 */
-  String? scalabilityMode;
+  // @override
+  // String? scalabilityMode;
 
   /*
    * Others.
@@ -410,28 +407,19 @@ class RtpEncodingParameters extends RTCRtpEncoding {
     this.codecPayloadType,
     this.rtx,
     this.dtx,
-    this.scalabilityMode,
+    super.scalabilityMode,
     this.adaptivePtime,
     this.priority,
     this.networkPriority,
-    bool active = true,
-    int? maxBitrate,
-    int? maxFramerate,
-    int? minBitrate,
-    int? numTemporalLayers,
-    String? rid,
-    double? scaleResolutionDownBy,
-    int? ssrc,
-  }) : super(
-          active: active,
-          maxBitrate: maxBitrate,
-          maxFramerate: maxFramerate,
-          minBitrate: minBitrate,
-          numTemporalLayers: numTemporalLayers,
-          rid: rid,
-          scaleResolutionDownBy: scaleResolutionDownBy,
-          ssrc: ssrc,
-        );
+    super.active,
+    super.maxBitrate,
+    super.maxFramerate,
+    super.minBitrate,
+    super.numTemporalLayers = null,
+    super.rid,
+    super.scaleResolutionDownBy = null,
+    super.ssrc,
+  });
 
   static RtpEncodingParameters fromMap(Map data) {
     return RtpEncodingParameters(
@@ -457,6 +445,7 @@ class RtpEncodingParameters extends RTCRtpEncoding {
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return {
       if (rid != null) 'rid': rid,
@@ -545,40 +534,40 @@ class CodecParameters {
   }
 
   List<String> get keys {
-    List<String> _keys = <String>[];
+    List<String> keys = <String>[];
 
     if (spropStereo != null) {
-      _keys.add('sprop-stereo');
+      keys.add('sprop-stereo');
     }
     if (stereo != null) {
-      _keys.add('stereo');
+      keys.add('stereo');
     }
     if (useinbandfec != null) {
-      _keys.add('useinbandfec');
+      keys.add('useinbandfec');
     }
     if (usedtx != null) {
-      _keys.add('usedtx');
+      keys.add('usedtx');
     }
     if (maxplaybackrate != null) {
-      _keys.add('maxplaybackrate');
+      keys.add('maxplaybackrate');
     }
     if (maxaveragebitrate != null) {
-      _keys.add('maxaveragebitrate');
+      keys.add('maxaveragebitrate');
     }
     if (ptime != null) {
-      _keys.add('ptime');
+      keys.add('ptime');
     }
     if (xGoogleStartBitrate != null) {
-      _keys.add('x-google-start-bitrate');
+      keys.add('x-google-start-bitrate');
     }
     if (xGoogleMaxBitrate != null) {
-      _keys.add('x-google-max-bitrate');
+      keys.add('x-google-max-bitrate');
     }
     if (xGoogleMinBitrate != null) {
-      _keys.add('x-google-min-bitrate');
+      keys.add('x-google-min-bitrate');
     }
 
-    return _keys;
+    return keys;
   }
 
   operator [](String key) => toMap()[key];
@@ -737,20 +726,12 @@ class RtpParameters {
     RtcpParameters? rtcp,
   }) {
     return RtpParameters(
-      codecs:
-          codecs != null ? codecs : List<RtpCodecParameters>.from(old.codecs),
-      encodings: encodings != null
-          ? encodings
-          : List<RtpEncodingParameters>.from(old.encodings),
-      headerExtensions: headerExtensions != null
-          ? headerExtensions
-          : List<RtpHeaderExtensionParameters>.from(old.headerExtensions),
+      codecs: codecs ?? List<RtpCodecParameters>.from(old.codecs),
+      encodings: encodings ?? List<RtpEncodingParameters>.from(old.encodings),
+      headerExtensions: headerExtensions ??
+          List<RtpHeaderExtensionParameters>.from(old.headerExtensions),
       mid: mid ?? old.mid,
-      rtcp: rtcp != null
-          ? rtcp
-          : old.rtcp != null
-              ? RtcpParameters.copy(old.rtcp!)
-              : null,
+      rtcp: rtcp ?? (old.rtcp != null ? RtcpParameters.copy(old.rtcp!) : null),
     );
   }
 

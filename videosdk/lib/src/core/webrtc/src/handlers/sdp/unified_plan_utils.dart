@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import '../../../src/handlers/sdp/media_section.dart';
 import '../../../src/rtp_parameters.dart';
 
@@ -5,7 +7,7 @@ class UnifiedPlanUtils {
   static List<RtpEncodingParameters> getRtpEncodings(
     MediaObject offerMediaObject,
   ) {
-    Set<int> ssrcs = Set<int>();
+    Set<int> ssrcs = <int>{};
 
     for (Ssrc line in offerMediaObject.ssrcs ?? []) {
       int ssrc = line.id!;
@@ -30,7 +32,7 @@ class UnifiedPlanUtils {
       int? ssrc;
       int? rtxSsrc;
 
-      if (tokens.length > 0) {
+      if (tokens.isNotEmpty) {
         ssrc = int.parse(tokens[0]);
       }
       if (tokens.length > 1) {
@@ -81,21 +83,17 @@ class UnifiedPlanUtils {
     }
 
     // Get the SSRC.
-    Ssrc? ssrcMsidLine = (offerMediaObject.ssrcs ?? []).firstWhere(
+    Ssrc ssrcMsidLine = (offerMediaObject.ssrcs ?? []).firstWhere(
       (Ssrc line) => line.attribute == 'msid',
-      orElse: () => null as Ssrc,
+      orElse: () => throw 'cannot find ssrc with line.attribute msid',
     );
-
-    if (ssrcMsidLine == null) {
-      throw ('a=ssrc line with msid information not found');
-    }
 
     List<String> tmp = ssrcMsidLine.value.split(' ');
 
     String streamId = '';
     String trackId = '';
 
-    if (tmp.length > 0) {
+    if (tmp.isNotEmpty) {
       streamId = tmp[0];
     }
     if (tmp.length > 1) {
@@ -122,9 +120,8 @@ class UnifiedPlanUtils {
       }
     });
 
-    Ssrc? ssrcCnameLine = offerMediaObject.ssrcs?.firstWhere(
+    Ssrc? ssrcCnameLine = offerMediaObject.ssrcs?.firstWhereOrNull(
       (Ssrc line) => line.attribute == 'cname',
-      orElse: () => null as Ssrc,
     );
 
     if (ssrcCnameLine == null) {

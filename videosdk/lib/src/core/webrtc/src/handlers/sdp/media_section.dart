@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import '../../../src/producer.dart';
 import '../../../src/rtp_parameters.dart';
 import '../../../src/sctp_parameters.dart';
@@ -316,6 +318,7 @@ class Simulcast {
   }
 }
 
+// ignore: camel_case_types
 class Simulcast_03 {
   final String value;
 
@@ -355,7 +358,7 @@ class Crypto {
   final int id;
   final String suite;
   final String config;
-  var sessionConfig;
+  dynamic sessionConfig;
 
   Crypto({
     required this.id,
@@ -450,11 +453,11 @@ class SourceFilter {
   });
 
   SourceFilter.fromMap(Map data)
-      : this.filterMode = data['filterMode'],
-        this.netType = data['netType'],
-        this.addressTypes = data['addressTypes'],
-        this.destAddress = data['destAddress'],
-        this.srcList = data['srcList'];
+      : filterMode = data['filterMode'],
+        netType = data['netType'],
+        addressTypes = data['addressTypes'],
+        destAddress = data['destAddress'],
+        srcList = data['srcList'];
 
   Map<String, String> toMap() {
     return {
@@ -912,8 +915,7 @@ abstract class MediaSection {
 
   void setDtlsRole(DtlsRole role);
 
-  String? get mid =>
-      _mediaObject.mid != null ? _mediaObject.mid.toString() : null;
+  String? get mid => _mediaObject.mid?.toString();
 
   bool get closed => _mediaObject.port == 0;
 
@@ -945,10 +947,10 @@ abstract class MediaSection {
 
 class AnswerMediaSection extends MediaSection {
   AnswerMediaSection({
-    required IceParameters iceParameters,
-    required List<IceCandidate> iceCandidates,
-    required DtlsParameters dtlsParameters,
-    bool planB = false,
+    required IceParameters super.iceParameters,
+    required List<IceCandidate> super.iceCandidates,
+    required DtlsParameters super.dtlsParameters,
+    super.planB = false,
     SctpParameters? sctpParameters,
     PlainRtpParameters? plainRtpParameters,
     required MediaObject offerMediaObject,
@@ -956,12 +958,7 @@ class AnswerMediaSection extends MediaSection {
     RtpParameters? answerRtpParameters,
     ProducerCodecOptions? codecOptions,
     bool extmapAllowMixed = false,
-  }) : super(
-          iceParameters: iceParameters,
-          iceCandidates: iceCandidates,
-          dtlsParameters: dtlsParameters,
-          planB: planB,
-        ) {
+  }) {
     _mediaObject.mid = offerMediaObject.mid;
     _mediaObject.type = offerMediaObject.type;
     _mediaObject.protocol = offerMediaObject.protocol;
@@ -1023,10 +1020,8 @@ class AnswerMediaSection extends MediaSection {
               final int? videoGoogleMinBitrate =
                   codecOptions.videoGoogleMinBitrate;
 
-              final RtpCodecParameters? offerCodec =
-                  offerRtpParameters?.codecs.firstWhere(
+              final offerCodec = offerRtpParameters?.codecs.firstWhereOrNull(
                 (RtpCodecParameters c) => c.payloadType == codec.payloadType,
-                orElse: () => null as RtpCodecParameters,
               );
 
               switch (codec.mimeType.toLowerCase()) {
@@ -1034,28 +1029,23 @@ class AnswerMediaSection extends MediaSection {
                   {
                     // if (opusStereo != null) {
                     // offerCodec.parameters['sprop-stereo'] = opusStereo ? 1 : 0;
-                    offerCodec!.parameters['sprop-stereo'] =
-                        opusStereo != null ? opusStereo : 0;
+                    offerCodec!.parameters['sprop-stereo'] = opusStereo ?? 0;
                     // codecParameters['stereo'] = opusStereo ? 1 : 0;
-                    codecParameters['stereo'] =
-                        opusStereo != null ? opusStereo : 0;
+                    codecParameters['stereo'] = opusStereo ?? 0;
                     // }
 
                     // if (opusFec != null) {
                     // offerCodec.parameters['useinbandfec'] = opusFec ? 1 : 0;
-                    offerCodec.parameters['useinbandfec'] =
-                        opusFec != null ? opusFec : 0;
+                    offerCodec.parameters['useinbandfec'] = opusFec ?? 0;
                     // codecParameters['useinbandfec'] = opusFec ? 1 : 0;
-                    codecParameters['useinbandfec'] =
-                        opusFec != null ? opusFec : 0;
+                    codecParameters['useinbandfec'] = opusFec ?? 0;
                     // }
 
                     // if (opusDtx != null) {
                     // offerCodec.parameters['usedtx'] = opusDtx ? 1 : 0;
-                    offerCodec.parameters['usedtx'] =
-                        opusDtx != null ? opusDtx : 0;
+                    offerCodec.parameters['usedtx'] = opusDtx ?? 0;
                     // codecParameters['usedtx'] = opusDtx ? 1 : 0;
-                    codecParameters['usedtx'] = opusDtx != null ? opusDtx : 0;
+                    codecParameters['usedtx'] = opusDtx ?? 0;
                     // }
 
                     if (opusMaxPlaybackRate != null) {
@@ -1249,24 +1239,19 @@ class AnswerMediaSection extends MediaSection {
 
 class OfferMediaSection extends MediaSection {
   OfferMediaSection({
-    required IceParameters iceParameters,
-    required List<IceCandidate> iceCandidates,
-    required DtlsParameters dtlsParameters,
+    required IceParameters super.iceParameters,
+    required List<IceCandidate> super.iceCandidates,
+    required DtlsParameters super.dtlsParameters,
     SctpParameters? sctpParameters,
     PlainRtpParameters? plainRtpParameters,
-    bool planB = false,
+    super.planB = false,
     required String mid,
     required String kind,
     RtpParameters? offerRtpParameters,
     String? streamId,
     String? trackId,
     bool oldDataChannelSpec = false,
-  }) : super(
-          planB: planB,
-          dtlsParameters: dtlsParameters,
-          iceCandidates: iceCandidates,
-          iceParameters: iceParameters,
-        ) {
+  }) {
     _mediaObject.mid = mid;
     _mediaObject.type = kind;
 
@@ -1437,7 +1422,7 @@ class OfferMediaSection extends MediaSection {
     }
   }
 
-  OfferMediaSection.fromMap(Map data) : super.fromMap(data);
+  OfferMediaSection.fromMap(super.data) : super.fromMap();
 
   @override
   void setDtlsRole(DtlsRole role) {
@@ -1519,10 +1504,6 @@ String getCodecName(RtpCodecParameters codec) {
   RegExp? mimeTypeRegex = RegExp(r"^(audio|video)/(.+)", caseSensitive: true);
   Iterable<RegExpMatch> mimeTypeMatch =
       mimeTypeRegex.allMatches(codec.mimeType);
-
-  if (mimeTypeMatch == null) {
-    throw ('invalid codec.mimeType');
-  }
 
   return mimeTypeMatch.elementAt(0).group(2)!;
 }

@@ -4,27 +4,24 @@ enum Permissions { audio, video, audio_video }
 
 class DeviceInfo extends MediaDeviceInfo {
   DeviceInfo(
-      {required String deviceId,
-      String? groupId,
-      String? kind,
-      required String label})
-      : super(deviceId: deviceId, groupId: groupId, kind: kind, label: label);
+      {required super.deviceId,
+      super.groupId,
+      super.kind,
+      required super.label});
 }
 
 class VideoDeviceInfo extends DeviceInfo {
   VideoDeviceInfo(
-      {required String deviceId,
-      String? groupId,
-      String? kind,
-      required String label})
-      : super(deviceId: deviceId, groupId: groupId, kind: kind, label: label);
+      {required super.deviceId,
+      super.groupId,
+      super.kind,
+      required super.label});
 }
 
 class AudioDeviceInfo extends DeviceInfo {
   AudioDeviceInfo(
-      {required String deviceId,
-      String? groupId,
-      String? kind,
-      required String label})
-      : super(deviceId: deviceId, groupId: groupId, kind: kind, label: label);
+      {required super.deviceId,
+      super.groupId,
+      super.kind,
+      required super.label});
 }

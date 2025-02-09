@@ -8,9 +8,9 @@ import 'participant_tile.dart';
 class ParticipantGridView extends StatefulWidget {
   final Room meeting;
   const ParticipantGridView({
-    Key? key,
+    super.key,
     required this.meeting,
-  }) : super(key: key);
+  });
 
   @override
   State<ParticipantGridView> createState() => _ParticipantGridViewState();
@@ -63,14 +63,14 @@ class _ParticipantGridViewState extends State<ParticipantGridView> {
                   pinState: pinnedParticipants[participant.id] ??
                       participant.pinState,
                 ))
-            .toList()
+            
       ],
     );
   }
 
-  void setMeetingListeners(Room _meeting) {
+  void setMeetingListeners(Room meeting) {
     // Called when participant joined meeting
-    _meeting.on(
+    meeting.on(
       Events.participantJoined,
       (Participant participant) {
         final newParticipants = participants;
@@ -82,7 +82,7 @@ class _ParticipantGridViewState extends State<ParticipantGridView> {
     );
 
     // Called when participant left meeting
-    _meeting.on(
+    meeting.on(
       Events.participantLeft,
       (participantId) {
         final newParticipants = participants;
@@ -94,7 +94,7 @@ class _ParticipantGridViewState extends State<ParticipantGridView> {
       },
     );
 
-    _meeting.on(Events.characterJoined, (Character character ) {
+    meeting.on(Events.characterJoined, (Character character ) {
       final newParticipants = participants;
         newParticipants[character.id] = character;
         setState(() {
@@ -102,7 +102,7 @@ class _ParticipantGridViewState extends State<ParticipantGridView> {
         });
     });
 
-    _meeting.on(Events.characterLeft, (Character character ) {
+    meeting.on(Events.characterLeft, (Character character ) {
       final newParticipants = participants;
 
         newParticipants.remove(character.id);
@@ -112,23 +112,23 @@ class _ParticipantGridViewState extends State<ParticipantGridView> {
     });
 
     // Called when speaker is changed
-    _meeting.on(Events.speakerChanged, (_activeSpeakerId) {
+    meeting.on(Events.speakerChanged, (activeSpeakerId) {
       setState(() {
-        activeSpeakerId = _activeSpeakerId;
+        activeSpeakerId = activeSpeakerId;
       });
 
-      log("meeting speaker-changed => $_activeSpeakerId");
+      log("meeting speaker-changed => $activeSpeakerId");
     });
 
-    _meeting.on(Events.pinStateChanged, (data) {
+    meeting.on(Events.pinStateChanged, (data) {
       setState(() {
-        pinnedParticipants = _meeting.pinnedParticipants;
+        pinnedParticipants = meeting.pinnedParticipants;
       });
     });
 
-    _meeting.on(Events.participantModeChanged, (data) {
+    meeting.on(Events.participantModeChanged, (data) {
       setState(() {
-        participants = _meeting.participants;
+        participants = meeting.participants;
       });
     });
   }

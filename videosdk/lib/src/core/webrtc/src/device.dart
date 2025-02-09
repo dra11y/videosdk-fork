@@ -23,7 +23,7 @@ class Device {
   // Local SCTP capabilities.
   SctpCapabilities? _sctpCapabilities;
   // Observer instance.
-  EnhancedEventEmitter _observer = EnhancedEventEmitter();
+  final EnhancedEventEmitter _observer = EnhancedEventEmitter();
 
   // Whether the Device is loaded.
   bool get loaded => _loaded;
@@ -126,7 +126,7 @@ class Device {
         await handler.close();
       }
 
-      throw error;
+      rethrow;
     }
   }
 

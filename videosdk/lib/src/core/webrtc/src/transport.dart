@@ -156,7 +156,7 @@ class IceCandidate {
 
   /// Unique identifier that allows ICE to correlate candidates that appear on
   /// multiple transports.
-  var foundation;
+  dynamic foundation;
 
   // String foundation;
 
@@ -184,11 +184,11 @@ class IceCandidate {
 
   int? rport;
 
-  var generation;
+  dynamic generation;
 
-  var networkId;
+  dynamic networkId;
 
-  var networkCost;
+  dynamic networkCost;
 
   IceCandidate({
     this.component = 1,
@@ -374,7 +374,7 @@ class PlainRtpParameters {
     required this.ip,
     required this.port,
     required int ipVersion,
-  })  : this._ipVersion = ipVersion,
+  })  : _ipVersion = ipVersion,
         assert(ipVersion != 4 || ipVersion != 6, 'Only 4 or 6');
 }
 
@@ -453,25 +453,25 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
   late Map<String, dynamic> _appData;
 
   // Map of Producers indexed by id.
-  Map<String, Producer> _producers = <String, Producer>{};
+  final Map<String, Producer> _producers = <String, Producer>{};
 
   // Map of Consumers indexed by id.
   Map<String, Consumer> consumers = <String, Consumer>{};
 
   // Map of DataProducers indexed by id.
-  Map<String, DataProducer> _dataProducers = <String, DataProducer>{};
+  final Map<String, DataProducer> _dataProducers = <String, DataProducer>{};
 
   // Map of DataConsumers indexed by id.
-  Map<String, DataConsumer> _dataConsumers = <String, DataConsumer>{};
+  final Map<String, DataConsumer> _dataConsumers = <String, DataConsumer>{};
 
   // Whether the Consumer for RTP probation has been created.
   bool _probatorConsumerCreated = false;
 
   // FlexQueue instance to make async tasks happen sequentially.
-  FlexQueue _flexQueue = FlexQueue();
+  final FlexQueue _flexQueue = FlexQueue();
 
   // Observer instance.
-  EnhancedEventEmitter _observer = EnhancedEventEmitter();
+  final EnhancedEventEmitter _observer = EnhancedEventEmitter();
 
   Function? producerCallback;
   Function? consumerCallback;
@@ -507,8 +507,7 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
     _direction = direction;
     _extendedRtpCapabilities = extendedRtpCapabilities;
     _canProduceByKind = canProduceByKind;
-    _maxSctpMessageSize =
-        sctpParameters != null ? sctpParameters.maxMessageSize : null;
+    _maxSctpMessageSize = sctpParameters?.maxMessageSize;
 
     // Clone and sanitize additionalSettings.
     additionalSettings = Map<String, dynamic>.of(additionalSettings);
@@ -666,7 +665,8 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
 
   /// Get associated Transport (RTCPeerConnection) stats.
   ///
-  /// @returns {List<StatsReport>}
+  /// @returns [List<StatsReport>]
+  @override
   Future<List<StatsReport>> getStats() async {
     if (_closed) {
       throw ('closed');
@@ -679,9 +679,9 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
   void restartIce(IceParameters iceParameters) {
     _logger.debug('restartIce()');
 
-    if (this._closed)
+    if (_closed) {
       throw ('closed');
-    else if (iceParameters == null) throw ('missing iceParameters');
+    } // else if (iceParameters == null) throw ('missing iceParameters');
 
     // Enqueue command.
     _flexQueue.addTask(FlexTaskAdd(
@@ -696,9 +696,9 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
   void updateIceServers(List<RTCIceServer> iceServers) {
     _logger.debug('updateIceServers()');
 
-    if (this._closed)
+    if (_closed) {
       throw ('closed');
-    else if (iceServers == null) throw ('missing iceServers');
+    } // else if (iceServers == null) throw ('missing iceServers');
 
     _flexQueue.addTask(FlexTaskAdd(
       id: '',
@@ -830,10 +830,9 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
     try {
       List<RtpEncodingParameters> normalizedEncodings = [];
 
-      if (arguments.encodings != null && arguments.encodings.isEmpty) {
+      if (arguments.encodings.isEmpty) {
         normalizedEncodings = [];
-      } else if (arguments.encodings != null &&
-          arguments.encodings.isNotEmpty) {
+      } else if (arguments.encodings.isNotEmpty) {
         normalizedEncodings =
             arguments.encodings.map((RtpEncodingParameters encoding) {
           RtpEncodingParameters normalizedEncoding =
@@ -916,7 +915,7 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
       } catch (error) {
         _handler.stopSending(sendResult.localId);
 
-        throw error;
+        rethrow;
       }
     } catch (error) {
       // This catch is needed to stop the given track if the command above
@@ -924,9 +923,12 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
       if (arguments.stopTracks) {
         try {
           arguments.track.stop();
-        } catch (error2) {}
+        } catch (error) {
+          // FIXME: (TG) Handle the error?
+          print("error: $error");
+        }
       }
-      throw error;
+      rethrow;
     }
   }
 
@@ -995,15 +997,8 @@ class Transport extends EnhancedEventEmitter implements MonitoringObject {
       rtpParameters: arguments.rtpParameters,
     ));
 
-    if (receiveResult.stream != null) {
-      if (receiveResult.track != null) {
-        if (receiveResult.stream.getTrackById(receiveResult.track.id!) ==
-            null) {
-          if (receiveResult.track != null) {
-            receiveResult.stream.addTrack(receiveResult.track);
-          }
-        }
-      }
+    if (receiveResult.stream.getTrackById(receiveResult.track.id!) == null) {
+      receiveResult.stream.addTrack(receiveResult.track);
     }
 
     Consumer consumer = Consumer(

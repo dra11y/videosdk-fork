@@ -304,8 +304,6 @@ class Participant {
         _setPinState({'share': true});
 
         break;
-      default:
-        break;
     }
     _participantPinStateChanged(id, pinState);
   }
@@ -322,8 +320,6 @@ class Participant {
       case PinType.SHARE:
         _setPinState({'share': false});
 
-        break;
-      default:
         break;
     }
     _participantPinStateChanged(id, pinState);
