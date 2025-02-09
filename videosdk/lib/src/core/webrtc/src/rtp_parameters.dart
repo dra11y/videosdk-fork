@@ -805,12 +805,13 @@ class RtcpParameters extends RTCRTCPParameters {
     bool? reducedSize,
   }) {
     return RtcpParameters(
-      mux: mux != null ? mux : old.mux,
-      cname: cname != null ? cname : old.cname,
-      reducedSize: reducedSize != null ? reducedSize : old.reducedSize,
+      mux: mux ?? old.mux,
+      cname: cname ?? old.cname ?? '',
+      reducedSize: reducedSize ?? old.reducedSize,
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return {
       'cname': cname,
